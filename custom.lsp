@@ -11,7 +11,12 @@
 ;;; BR : pour couper un objet en un seul point. sélectionnez l'objet à couper puis cliquer sur le point où couper
 ;;;
 ;;; porte : pour dessiner une porte. spécifiez le premier point, le second point, puis cliquez du côté où ouvrir la porte
-
+;;;
+;;; spécial pour Mathilde pour la gestion du calque np (pourrait s'appliquer à d'autres calques
+;;; gnp : gel ou dégèle le calque np
+;;; vnp : verrouille ou déverrouille le calque np 
+;;;
+;;; repeat_offset : permet de faire un décaler multiple. décaler l'objet selon une liste de distance (mode cumul ou interval)
 
 
 ; vecteur
@@ -225,4 +230,165 @@
   (princ)
 
 )
+
+(defun c:repeat_offset ( / ent mode vn lst_vn tmp side_offset)
+
+        (setq ent "Interval" mode nil)
+
+        (initget "Cumul Interval")
+
+        (while (or (eq  (setq ent (entsel (strcat "\nSélectionnez l'objet à décaler plusieurs fois ou Mode d'action [Cumul/Interval] <" ent ">: "))) "Interval") (eq ent "Cumul") (not ent))
+
+                (if (not ent) (setq ent (if mode "Cumul" "Interval")))
+
+                (if (eq ent "Cumul") (setq mode T) (setq mode nil))
+
+                (initget "Cumul Interval")
+
+        )
+
+        (cond
+
+                (ent
+
+                        (setq lst_vn nil)
+
+                        (initget 70 "Median")
+
+                        (princ  "\nSpécifiez une distance de décalage ou [Median]: ")
+
+                        (while (setq vn (getdist (cadr ent)))
+
+                                (princ "\nSpécifiez une distance de décalage ou [Median] [")
+
+                                (cond
+
+                                        ((eq vn "Median")
+
+                                                (if (and (car lst_vn) (< (car lst_vn) 0.0))
+
+                                                        (princ " *Déja en mode MEDIAN* ")
+
+                                                        (progn
+
+                                                                (foreach n (reverse lst_vn) (princ (rtos n)) (princ "/"))
+
+                                                                (setq lst_vn (cons -1.0 lst_vn))
+
+                                                        )
+
+                                                )
+
+                                                (princ "]: ")
+
+                                        )
+
+                                        (T
+
+                                                (cond
+
+                                                        (mode
+
+                                                                (if (eq (car lst_vn) -1.0)
+
+                                                                        (if (cadr lst_vn)
+
+                                                                                (setq lst_vn (cons vn (cons (+ (cadr lst_vn) (/ (- vn (cadr lst_vn)) 2.0)) (cdr lst_vn))))
+
+                                                                                (setq lst_vn (cons vn (cons (+ (/ vn 2.0)) (cdr lst_vn))))
+
+                                                                        )
+
+                                                                        (if (> vn (car lst_vn))
+
+                                                                                (setq lst_vn (cons vn lst_vn))
+
+                                                                                (princ "\n*Incorrect* La valeur doit être > à la précédente.\nSpécifiez une distance de décalage [")
+
+                                                                        )
+
+                                                                )
+
+                                                                (foreach n (reverse lst_vn) (princ (rtos n)) (princ "/"))
+
+                                                        )
+
+                                                        (T
+
+                                                                (if (eq (car lst_vn) -1.0)
+
+                                                                        (setq lst_vn (cons (/ vn 2.0) (cons (/ vn 2.0) (cdr lst_vn))))
+
+                                                                        (setq lst_vn (cons vn lst_vn))
+
+                                                                )
+
+                                                                (foreach n (reverse lst_vn) (princ (rtos n)) (princ "/"))
+
+                                                        )
+
+                                                )
+
+                                                (princ "]: ")
+
+                                        )
+
+                                )
+
+                                (initget 70 "Median")
+
+                        )
+
+                        (if (member -1.0 lst_vn) (setq lst_vn (vl-remove -1.0 lst_vn)))
+
+                        (if (not mode)
+
+                                (progn
+
+                                        (setq tmp nil)
+
+                                        (while lst_vn
+
+                                                (setq tmp (cons (apply '+ lst_vn) tmp))
+
+                                                (setq lst_vn (cdr lst_vn))
+
+                                        )
+
+                                        (setq lst_vn (reverse tmp))
+
+                                )
+
+                        )
+
+                        (cond
+
+                                (lst_vn
+
+                                        (initget 1)
+
+                                        (setq side_offset (getpoint "\nSpécifiez un point sur le côté à décaler: "))
+
+                                        (setvar "cmdecho" 0)
+
+                                        (command "_.undo" "_group")
+
+                                        (foreach n lst_vn (command "_.offset" n ent side_offset ""))
+
+                                        (command "_.undo" "_group")
+
+                                        (setvar "cmdecho" 1)
+
+                                )
+
+                        )
+
+                )
+
+        )
+
+        (prin1)
+
+)
+
 
