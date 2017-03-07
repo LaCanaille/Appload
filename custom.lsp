@@ -84,80 +84,63 @@
 ; creation porte simple, en 3 points
 (defun c:porte (/ pt1 pt2 ext angside edpline arc sel angext)
 
- (command "_.undo" "_group")
-  
- (setq pt1 (getpoint "\nSpécifiez le premier point: ")
-       pt2 (getpoint pt1  "\nSpécifiez le second point: ")
-       ext (getpoint  "\nSpécifiez le côté de l'ouverture: ")
-       angside (angle pt1 pt2)
-       angext (angle pt1 ext)
-       pi4 (/ PI 4)
- )
+  (command "_.undo" "_group")
 
-(if (> angside PI)
+  (setq	pt1	(getpoint "\nSpécifiez le premier point: ")
+	pt2	(getpoint pt1 "\nSpécifiez le second point: ")
+	ext	(getpoint "\nSpécifiez le côté de l'ouverture: ")
+	angside	(angle pt1 pt2)
+	angext	(angle pt1 ext)
+	pi4	(/ PI 4)
+  )
 
-  (progn
-    (if (and (< angext angside)(> angext (- angside PI)))
-      (setq dir (- pi4))
-      (setq dir (+ pi4))
+  (if (> angside PI)
+
+    (progn
+      (if (and (< angext angside) (> angext (- angside PI)))
+	(setq dir (- pi4))
+	(setq dir (+ pi4))
       )
-    
+
     )
-  
-  (progn ; angside > pi
-    (if (and (> angext angside)(< angext (+ angside PI)))
-      (setq dir (+ pi4))
-      (setq dir (- pi4))
-	
+
+    (progn				; angside > pi
+      (if (and (> angext angside) (< angext (+ angside PI)))
+	(setq dir (+ pi4))
+	(setq dir (- pi4))
+
       )
     )
-  
-)
-  
-(setq angside (+ angside dir))
-(setq ext (polar pt1 angside (distance pt1 pt2)))
- 
 
+  )
 
-  ;(setq ocmd (getvar "cmdecho"))
-  ;  (setvar "CMDECHO" 0)
-  
+  (setq angside (+ angside dir))
+  (setq ext (polar pt1 angside (distance pt1 pt2)))
+
   (command "_.pline" "_none" pt1 "_none" ext "")
-  (setq edpline (entlast)) ; mémorise pline
+  (setq edpline (entlast))		; mémorise pline
 
 
   (if (< dir 0)
-    
-   (command "_.arc" "_c" "_none" pt1 ext pt2)
-   (command "_.arc" "_c" "_none" pt1 pt2 ext)
+
+    (command "_.arc" "_c" "_none" pt1 ext pt2)
+    (command "_.arc" "_c" "_none" pt1 pt2 ext)
   )
- (princ "hello2")
-; transforme arc en polyligne puis join?
-(setq arc (entlast))
-;(setq sel (append edpline arc))
-  
-  
-;;;  (setq pe (getvar 'PEDITACCEPT))
-;;;  (setvar 'PEDITACCEPT 1)
-;  (command "_.pedit" arc "")
-;;;  (princ "hello3youyouyouyou")
-;  (command "_.pedit" "_m" arc edpline "_join" "" "") ; Y?
- (princ "hello3")
-;;;   (setvar 'PEDITACCEPT pe)
+
+  (setq arc (entlast))
 
   (if (zerop (getvar "peditaccept"))
-         (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
-         (command "_.pedit" "_m" arc edpline "" "_j" "" "")
-       )
-  
-  ;(setvar "CMDECHO" ocmd)
+    (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
+    (command "_.pedit" "_m" arc edpline "" "_j" "" "")
+  )
 
-
-(command "_.undo" "_end")
+  (command "_.undo" "_end")
 
   (princ)
-  
+
 )
+
+
 
 
 ; gel/ dégel le calque NP
@@ -390,5 +373,35 @@
         (prin1)
 
 )
+
+; T2M - convert individual Texts/Dtexts to individual MTexts
+
+; modified by Xanadu - www.xanadu.cz
+
+; ***** This routine NEEDS the Express Tools *****
+
+
+(defun C:T2M (/ ss i elist)
+
+  (prompt "\nSelect Text objects to convert to MTexts: ")
+
+  (setq ss (ssget (list (cons 0 "TEXT"))))
+
+  (setq i -1)
+
+  (if ss
+
+    (repeat (sslength ss)
+
+      (setq elist (cdr (assoc -1 (entget (ssname ss (setq i (1+ i)))))))
+
+      (command "TXT2MTXT" elist ""); Express Tools command
+
+    )
+
+  )
+
+)
+
 
 
