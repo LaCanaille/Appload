@@ -619,7 +619,7 @@
   
   (SetCustomByKeyT "Altimetrie" Altimetrie target)
   (SetCustomByKeyT "AltiMethode" AltiMethode target)
-  (if (= "3" (GetIndex "AltiMethode" target mAltiListC))
+  (if (= "sur RN n° " (GetCustomNotNil "AltiMethode" target));(= "3" (GetIndex "AltiMethode" target mAltiListC)) 
   	(SetCustomByKeyT "RN" RN target)
         (SetCustomByKeyT "RN" " " target)
   )
