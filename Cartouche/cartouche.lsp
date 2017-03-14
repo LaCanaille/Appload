@@ -36,6 +36,7 @@
 ; Renvoie un string 
 ; si la valeur n'y est pas renvoie "0"
 ; variante GetIndexV (val liste)
+; l'index dans la liste commence à 0
 
 ;;; Regen() regeneration du dessin
 
@@ -407,7 +408,7 @@
   (set_tile "AltiMethode" (GetIndex "AltiMethode" target mAltiListC))
 
   (set_tile "RN" (setq RN (GetCustomNotNil "RN" target)))  ; optionnel. Seulement si choix sur RN
-  (if (= "2" (GetIndex "AltiMethode" target mAltiListC))
+  (if (= "sur RN n° " (GetCustomNotNil "AltiMethode" target)) ;"3" (GetIndex "AltiMethode" target mAltiListC))
 
        (mode_tile "RN" 0)
        (mode_tile "RN" 1)
@@ -474,7 +475,7 @@
   
   (action_tile "AltiMethode" ; active ou désactive le champs RN
 
-    "(if (= $value \"2\")
+    "(if (= $value \"3\")
 
        (mode_tile \"RN\" 0)
        (mode_tile \"RN\" 1))"
@@ -618,7 +619,7 @@
   
   (SetCustomByKeyT "Altimetrie" Altimetrie target)
   (SetCustomByKeyT "AltiMethode" AltiMethode target)
-  (if (= "2" (GetIndex "AltiMethode" target mAltiListC))
+  (if (= "3" (GetIndex "AltiMethode" target mAltiListC))
   	(SetCustomByKeyT "RN" RN target)
         (SetCustomByKeyT "RN" " " target)
   )
