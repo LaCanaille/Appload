@@ -47,15 +47,23 @@
 ; which 2 met une majuscule à chaque mot
 ; sinon met une majuscule au début puis normal la suite
 
-;;; words2caps : met un texte en majuscule
+;;; words2caps : met une majuscule à chaque mot d'une chaine de caractère
 
 ;;; noSpaces(str)
-; enlève les espaces d'une chaine de caractères
+; enlève tous les espaces d'une chaine de caractères
+
+;;; multiple(str)
+; défini si il y a des espaces, virgules, points, tirets, points virgules dans une chaine de caractères.
+;retourne nil si il n'y en a pas, true sinon
 
 ;;;  isEmpty (str)
 ; défini si le string str est vide.
 ; retourne True si str est vide (des espaces ou bien nul)
 ; retourne nil sinon
+
+;;; planDP10 (str)
+;;; crée le titre de la présentation DP10 selon le nombre de lots
+; prend en argument le nombre de lots écrit en lettres
 
 ;;; popupVar
 ; Create hashTable for popup list
@@ -68,13 +76,8 @@
 
 (defun c:test()
   
-  (princ "hello you")
-  (setq test "   yola bibb   j")
-  (princ test)
-  (setq test (noSpaces test))
-  (princ " ici ")
-  (princ test)
-  (setvar "CLAYER" "DP.1") 
+  (princ "hello pouet")
+
 )
 
 
@@ -434,6 +437,13 @@
   (set_tile "Planche" (setq Planche (GetCustomNotNil "Planche" target)))
   (set_tile "Echelle" (setq Echelle (GetCustomNotNil "Echelle" target)))
 
+  (set_tile "Lot" (setq Lot (GetCustomNotNil "Lot" target)))  ; optionnel. Seulement si choix DP10
+  (if (or (= "DP0" (GetCustomNotNil "Type" target)) (= "DP3" (GetCustomNotNil "Type" target))) 
+
+       (mode_tile "Lot" 0)
+       (mode_tile "Lot" 1)
+     )
+
   (setq Date (GetCustomNotNil "Date" target))
   (start_list "DateJ")			
   (mapcar 'add_list jourList)			
@@ -481,6 +491,15 @@
        (mode_tile \"RN\" 1))"
   )
   (action_tile "RN" "(setq RN $value)")
+
+  (action_tile "Plan" ; active ou désactive le champs Lot
+
+    "(if (or (= $value \"25\") (= $value \"26\"))  
+
+       (mode_tile \"Lot\" 0)
+       (mode_tile \"Lot\" 1))"
+  ); cas DP10 ou Pochettes dp1 dp9 dp10
+  (action_tile "Lot" "(setq Lot $value)")
 
   ; présentation gabarit
     
@@ -589,7 +608,8 @@
   
   (SetCustomByKeyT "Parcelle" Parcelle target)
   (setq par "Parcelle ")
-  (if (> (strlen (noSpaces Parcelle)) 2)
+  
+  (if (multiple Parcelle)
     (setq par "Parcelles "))
   (if (isEmpty Parcelle)
     (SetCustomByKeyT "Parcelle1" " " target)
@@ -624,8 +644,10 @@
         (SetCustomByKeyT "RN" " " target)
   )
 
-
-
+  (if (or (="DP3" Typ) (="DP0" Typ)) ; transformer le titre du plan dans le cas d'une DP10. Nombre de lots à créer
+    (setq Plan (planDP10 Lot))
+    )
+  
   ; on sauvegarde les propriétés de la dernière présentation créée
   (SetCustomByKeyT "Plan" Plan target)
   (SetCustomByKeyT "Type" Typ target)
@@ -652,29 +674,40 @@
   (SetCustomByKeyT "TitrePres" TitrePres target)
 
   ; Renommer ou créer une nouvelle présentation
-  (princ " temp ")
-  (princ Template)
-  (princ " ong  ")
-  (princ Onglet)
-  
+;;;  (princ " temp ")
+;;;  (princ Template)
+;;;  (princ " ong  ")
+;;;  (princ Onglet)
+  (princ "test8 123")
 (cond
   ((= Presentation "Nouvelle")
    (progn
      (if (member TitrePres (layoutlist))
   	(alert "Cette présentation existe déjà, elle ne sera donc pas créée")
-        (CreatePres TitrePres Template Onglet Nouv)
+        (progn
+	 (if (/="DP3" Typ) 
+        	(CreatePres TitrePres Template Onglet Nouv)
+	 	(progn  ; création des 4 onglets
+		  (princ "creation pochettes dp")
+	   		(CreatePres "POCHETTES pouet" Template "POCHETTES DP" Nouv)
+		  	;(CreatePres (strcat "bla1_" Indice Planche "_" Echelle "_" Date "_PLAN DE SITUATION") Template "DP1_A1_00200_01-01-2017_PLAN DE SITUATION" Nouv)
+		  	;(CreatePres (strcat "DPbla9_" Indice Planche "_" Echelle "_" Date "_PLAN DES LIEUX" ) Template "DP9_A1_00200_01-01-2017_PLAN DES LIEUX" Nouv)
+		  	;(CreatePres (strcat "DblaP0_" Indice Planche "_" Echelle "_" Date "_" Plan) Template "DP0_A1_00200_01-01-2017_CRÉATION DE DEUX LOTS À BÂTIR" Nouv)
+	   	)
+		); if /=DP3 
+	 ); progn
      )
     )
    )
-  (t (progn
+  (t (progn ; pas de nouvelle présentation. on renomme simplement
          (setq ocmd (getvar "cmdecho"))
     	 (setvar "CMDECHO" 0)
        
        (if (AND (/= TitrePres Presentation) (member TitrePres (layoutlist)) )
 	 (alert "Cette présentation existe déjà, la présentation choisie ne sera pas modifiée")
 	 (progn 
-       	 (command "_.layout" "R"  Presentation TitrePres)
-	 (command "_.layout" "e" TitrePres)
+       	 (command "_.layout" "R"  Presentation TitrePres) ; renomme
+	 (command "_.layout" "e" TitrePres) ; rend la présentation courante
 		  )
 	 )
     	(setvar "CMDECHO" ocmd)
@@ -692,10 +725,13 @@
 
 ; Crée une nouvelle présentation au titre "titre"
 ; si n = "1" elle la crée à partir de la page p du gabarit gab si existe
-; (gabarit est le nom dun dwt présent dans le dossiers de gabarit par défaut
+; (gabarit est le nom d un dwt présent dans le dossiers de gabarit par défaut
 (defun CreatePres (titre gab p n)
   (setq ocmd (getvar "cmdecho"))
-    	 (setvar "CMDECHO" 0)
+    	 (setvar "CMDECHO" 1) ; 0 pour ne pas voir les comments
+
+  (princ "titre pres")
+  (princ titre)
 ;;;   (setq doc (GetItem
 ;;;                     (vla-get-Documents (vlax-get-acad-object))
 ;;;                     (strcat (vl-filename-base filename) ".dwg")
@@ -709,30 +745,29 @@
   ;(vla-put-activelayout *acdoc* layoutObj)
 
   (if (= "0" n) ; on n'utilise pas le gabarit
-    (vla-Add (vla-get-Layouts *acdoc*) TitrePres)
+    (vla-Add (vla-get-Layouts *acdoc*) titre)
     (progn
   
 	  (if (member p (layoutlist)) ; si la presentation modele existe déjà on la renomme temporairement
 	    (command "_.layout" "R"  p "template"))
 	  
 	  (command "FILEDIA" "0") ; pour qu'il n'y ai pas de fenêtre qui s'ouvre
-	  (command "_.layout" "g"  gab p "")
+	  (command "_.layout" "g"  gab p "") ; import de la presentation du gabarit
 	 
 	  (if (member p (layoutlist))  
-	    (command "_.layout" "r" p TitrePres) ; si la création a marché on renomme l'onglet
-	    (command "._u" "_.layout" "n" TitrePres) ; sinon on crée juste un nouvel onglet
+	    (command "_.layout" "r" p titre) ; l'import a fonctionné, on renomme l'onglet
+	    (command "._u" "_.layout" "n" titre) ; l'import n'a pas fonctionné, on crée juste un nouvel onglet
 	    )
 	  
 	   
 	  (command "FILEDIA" "1")
 
 	  (if (member "template" (layoutlist))
-	    (command "_.layout" "R"  "template" p))
-
-	  (setvar "CMDECHO" ocmd)
+	    (command "_.layout" "R"  "template" p))	  
       ) ; fin else
     )
-  (command "_.layout" "e" TitrePres) ; rendre la nouvelle présentation courante
+  (command "_.layout" "e" titre) ; rendre la nouvelle présentation courante
+  (setvar "CMDECHO" ocmd)
   (command "FILEDIA" "1")
 ) ; defun Create
 
@@ -792,7 +827,7 @@
  ; string
 ); defun Case
 
-; transforme un texte en majuscule
+; Met une majuscule à chaque mot
 (defun words2caps (text / i c w r)
   (setq i 0 w "")
   (repeat (strlen text)
@@ -816,6 +851,17 @@
   )
 )
 
+; défini si il y a des espaces, virgules, points, tirets, points virgules dans une chaine de caractères. retourne nil si il n'y en a pas, true sinon
+(defun multiple (str)
+ (setq str (vl-string-trim " " str)) ; suppression des espaces au début et à la fin
+ (setq int (vl-string-position (ascii "-") str))
+  (if (or (vl-string-position (ascii " ") str) (vl-string-position (ascii "-") str) (vl-string-position (ascii ",") str) (vl-string-position (ascii ".") str) (vl-string-position (ascii ";") str))
+    T
+    nil
+    )
+)
+  
+
 ;; défini si le string str est vide.
 ;; retourne True si str est vide (des espaces ou bien nul)
 ;; retourne nil sinon
@@ -832,6 +878,16 @@
     )
   empty
   )
+
+;;; crée le titre de la présentation DP10 selon le nombre de lots
+; prend en argument le nombre de lots
+(defun planDP10 (lot)
+  (setq lot (noSpaces (Case lot 0)))
+  (if (= "UN" lot)
+  	(setq plan "CRÉATION D'UN LOT À BÂTIR")
+   	(setq plan (strcat "CRÉATION DE " lot " LOTS À BÂTIR"))
+    )
+ )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Create hashTable for popup list
@@ -862,6 +918,11 @@
 "PERIMETRE DUP"; 19
 "PERIMETRE SUP"; 20
 "TRAVAUX"; 21
+"SERVITUDE";22
+"DP1";23
+"DP9";24
+"DP10";25
+"DP1 DP9 DP10";26
  ))
   
   ;LISTE TITRE POUR LE CARTOUCHE
@@ -869,25 +930,30 @@
 "PLAN D'IMPLANTATION" ;0
 "PLAN DE PRÉ IMPLANTATION" ;1
 "PLAN TOPOGRAPHIQUE" ;2
-"PLAN DE RECOLEMENT" ;3
+"PLAN DE RÉCOLEMENT" ;3
 "VUE EN PLAN" ;4
-"PLAN DE REPERAGE" ;5
-"PLAN D'ETAT DES LIEUX" ;6
+"PLAN DE REPÉRAGE" ;5
+"PLAN D'ÉTAT DES LIEUX" ;6
 "PLAN DE BORNAGE" ;7 
 "PLAN DE DIVISION";8
 "PROJET DE DIVISION" ;9
 "PROFIL EN LONG" ;10
 "PROFIL EN TRAVERS" ;11
-"PLAN DE COPROPRIETE" ;12
+"PLAN DE COPROPRIÉTÉ" ;12
 "PLAN D'INTERIEUR" ;13
 "PLAN DE DIVISION EN VOLUMES" ;14
-"PLAN DE FACADE" ;15
+"PLAN DE FAÇADE" ;15
 "COUPE" ;16
 "PLAN DE SITUATION";17
 "PLAN PARCELLAIRE";18
-"PERIMETRE DE LA DUP"; 19
-"PERIMETRE DE LA SUP"; 20
-"PLAN GENERAL DES TRAVAUX"; 21
+"PÉRIMÈTRE DE LA DUP"; 19
+"PÉRIMÈTRE DE LA SUP"; 20
+"PLAN GÉNÉRAL DES TRAVAUX"; 21
+"PLAN DE SERVITUDE"; 22
+"PLAN DE SITUATION";23
+"PLAN DES LIEUX";24
+"CRÉATION D'UN LOT À BÂTIR";25
+"POCHETTES DP";26
 ))
 
   (setq planListT (list ; type 3 lettres
@@ -913,6 +979,11 @@
 "PRD" ;19
 "PRS" ;20
 "TRA" ;21
+"SRV";22
+"DP1";23
+"DP9";24
+"DP0";25
+"DP3";26
 ))		   
 
   
@@ -929,7 +1000,8 @@
 "LAMBERT 93 CC47" ;9
 "LAMBERT 93 CC48" ;10
 "LAMBERT 93 CC49" ;11
-"Indépendante")) ;12
+"LAMBERT 93" ;12
+"Indépendante")) ;13
 
   
  ; (setq mPlaniList '("Aucun" "TERIA"))
