@@ -93,8 +93,8 @@ cartouche : dialog {				//dialog name
 	label = "Objet :";
 	key = "Objet1";
 	alignment = centered;
-	edit_limit = 30;
-	edit_width = 30;
+	edit_limit = 90;
+	edit_width = 90;
 	}
  
         }					//fin colonne de gauche
@@ -200,7 +200,7 @@ cartouche : dialog {				//dialog name
      	}
 	: popup_list {			
         key = "Presentation";
-        width = 50;
+        width = 80;
         }
         	
 	spacer_0;
@@ -283,6 +283,17 @@ cartouche : dialog {				//dialog name
 	alignment = right;
 	edit_limit = 5;
 	edit_width = 5;
+	width = 5;
+	fixed_width = true;
+	}
+
+	: edit_box
+	{
+	label = "DP10 : Nombre de lots (en lettres)";
+	key = "Lot";
+	alignment = right;
+	edit_limit = 25;
+	edit_width = 25;
 	width = 5;
 	fixed_width = true;
 	}
