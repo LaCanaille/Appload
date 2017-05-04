@@ -961,7 +961,7 @@
 "CRÉATION D'UN LOT À BÂTIR";25
 "POCHETTES DP";26
 "PLAN DE PIQUETAGE";27
-"PLAN D'ÉPURE";28
+"ÉPURE D'IMPLANTATION";28
 ))
 
   (setq planListT (list ; type 3 lettres
