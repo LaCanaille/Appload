@@ -83,8 +83,8 @@ cartouche : dialog {				//dialog name
 	label = "Parcelle :";
 	key = "Parcelle";
 	alignment = left;
-	edit_limit = 10;
-	edit_width = 10;
+	edit_limit = 30;
+	edit_width = 30;
 	}
 	}
 

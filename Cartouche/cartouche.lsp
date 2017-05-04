@@ -928,6 +928,7 @@
 "DP10";25
 "DP1 DP9 DP10";26
 "PIQUETAGE";27
+"EPURE";28
  ))
   
   ;LISTE TITRE POUR LE CARTOUCHE
@@ -960,6 +961,7 @@
 "CRÉATION D'UN LOT À BÂTIR";25
 "POCHETTES DP";26
 "PLAN DE PIQUETAGE";27
+"PLAN D'ÉPURE";28
 ))
 
   (setq planListT (list ; type 3 lettres
@@ -991,6 +993,7 @@
 "DP0";25
 "DP3";26
 "PIQ";27
+"EPU";28
 ))		   
 
   
