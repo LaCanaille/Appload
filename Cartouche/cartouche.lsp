@@ -76,9 +76,10 @@
 
 (defun c:test()
   
-  (princ "hello pouet")
+  (princ "hello 312 pouet")
   (princ (vl-string-subst "DP.dwg" ".dwg" "yopla.dwg"))
-
+(setq dim (getvar "screensize"))
+  (princ dim)
 )
 
 

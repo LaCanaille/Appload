@@ -1,6 +1,8 @@
 cartouche : dialog {				//dialog name
       label = "Personnalisation du cartouche" ;		//give it a label
-
+	width = 150;
+	height = 10;
+	
 	: row {
 
 	: boxed_column {			//define boxed column
