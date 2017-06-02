@@ -19,6 +19,8 @@
 ;;; repeat_offset : permet de faire un décaler multiple. décaler l'objet selon une liste de distance (mode cumul ou interval)
 ;;;
 ;;; T2M - convert individual Texts/Dtexts to individual MTexts
+;;;
+;;; inc : numérote avec incrémentation les sommets d'une polyligne, avec des chiffres ou des lettres
 
 
 ; vecteur
@@ -48,7 +50,6 @@
 
 (princ)					; fin silencieux
 )
-
 
 ; vectech prend en compte une échelle
 (defun vectech (width dist ech / pt1 pt2 pt3 pt4)
@@ -465,68 +466,35 @@
   
 ) ; fin numero
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Incrementation lettre ou numero des sommets d'une polyligne
 ;http://cadxp.com/topic/29955-icrementation-texte-dans-lordre-dune-polyligne/
-(defun c:G18a()
-(vl-load-com)
-(princ "\nAttention au sens de la polyligne d'AXE!!!")
-(setq cc (getvar "clayer"))
-(setq r (strcase (getstring (strcat "\nCalque d'insertion de la numérotation: <" cc "> : "))))
-(if (= "" r)(setq r cc))
-(setvar "clayer" r)
-(setq num (getreal "\nNuméro de départ <1>: "))
-(if (= nil num)(setq num 1))
-(setq haut (getreal "\nHauteur du texte <1>: "))
-(if (= nil haut)(setq haut 1))
-(setq ObjLwHaut (car (entsel "\nSélectionner l'AXE : ")))
-(setq VlaObjLwHaut (vlax-ename->vla-object ObjLwHaut))
-(SommetLWPol (entget ObjLwHaut))
-(setq LstPointsLwHaut LstPointsLw)
-(setq NbreSommet (length LstPointsLwHaut))
-(setq lst (ssget "_f" LstPointsLwHaut (list (cons 0 "point"))))
-(setq nombreau (sslength lst))
-(setq indiceau 0)
-(repeat nombreau
-(setq ent (ssname lst indiceau))
-(setq x (list lst indiceau))
-(setq tl (vlax-get (vlax-ename->vla-object ent) 'coordinates))
-(setq resul (+ num indiceau))
-(command "_text" tl haut 0 (rtos resul 2 0))
-(setq indiceau (1+ indiceau))
-)
-)
+(defun c:test()
+  (setq ind (getstring "\nLettre de départ <A>: "))
+  (if (eq ind "")
+	(setq ind "A")
+    )
+  (setq ind (A++ ind))
+  (princ ind)
+      )
 
-(defun c:G18a(/ ang cc doc esp haut js lig lst num pt1 pt2 r sel tab)
-
-  (vl-load-com)
-
-  (setq doc (vla-get-activedocument (vlax-get-acad-object)))
-
-  (if (zerop (getvar "tilemode"))
-
-    (setq esp (vla-get-paperspace doc))
-
-    (setq esp (vla-get-modelspace doc))
-
-  )
-
-  (or patrick_g18a_calque (setq patrick_g18a_calque (getvar "clayer")))
-
-  (or patrick_g18a_haut (setq patrick_g18a_haut 1))
-
-  (or patrick_g18a_num (setq patrick_g18a_num 1))
+;;; place à chaque sommet d'une polyligne une chaine de caractère qui s'incrémente
+; Fonctionne avec lettres et chiffres
+(defun c:inc(/ cc haut ind pt r)
+  (command "_.undo" "_group")
 
   (princ "\nAttention au sens de la polyligne d'AXE!!!")
 
   (while (not r)
 
-    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" patrick_g18a_calque "> : ")))
+    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" (setq cc (getvar "clayer")) "> : ")))
 
     (cond
 
       ((eq r "")
 
-        (setq r patrick_g18a_calque)
+        (setq r cc)
 
       )
 
@@ -538,27 +506,27 @@
 
       )
 
-      (T
-
-        (setq patrick_g18a_calque r)
-
-      )
-
     )
 
   )
 
-  (and (setq num (getint (strcat "\nNuméro de départ <" (itoa patrick_g18a_num) ">: ")))
+  (setq ind (getstring "\nLettre de départ <A>: "))
+  (if (eq ind "")
+	(setq ind "A")
+  )
+  
+  (or (setq haut (getreal "\nHauteur du texte <0.4>: "))
 
-    (setq patrick_g18a_num num)
+    (setq haut 0.4)
 
   )
 
-  (and (setq haut (getreal (strcat "\nHauteur du texte <" (rtos patrick_g18a_haut) ">: ")))
-
-    (setq patrick_g18a_haut haut)
-
+  (setq style (getstring "\nStyle du texte <Standard>: "))
+  (if (eq style "")
+	(setq style "Standard")
   )
+  (if (not (tblsearch "style" style))
+    (setq style "Standard"))
 
   (and  (setq ObjLwHaut (entsel "\nSélectionner l'AXE : "))
 
@@ -567,188 +535,42 @@
         (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
 
     (progn
+      (foreach pt (vl-remove-if-not '(lambda(x)(eq (car x) 10)) ObjLwHaut)
 
-      (vla-startundomark doc)
+        (entmake (list  (cons   0 "TEXT")
 
-      (setq lst (vl-remove-if-not '(lambda(x)(eq (car x) 10)) ObjLwHaut)
+                        (cons 100 "AcDbEntity")
 
-            js (ssget "_x" '((0 . "POINT")))
+                        (cons 100 "AcDbText")
 
-            sel (vla-get-activeselectionset doc)
+                        (cons   1 ind)
 
+			(cons 7  style)
+
+                        (cons  10 (trans (cdr pt) 1 0))
+
+                        (cons  11 (trans (cdr pt) 1 0))
+
+                        (cons   8 r)
+
+                        (cons  40 haut)
+
+                 )
+
+        )
+	(setq ind (A++ ind))
       )
-
-      (while (and js (cadr lst))
-
-        (setq tab nil
-
-              pt1 (cdar lst)
-
-              pt2 (cdadr lst)
-
-              ang (angle pt1 pt2)
-
-        )
-
-        (setq lig (vla-addline esp (vlax-3d-point (trans pt1 1 0)) (vlax-3d-point (trans pt2 1 0))))
-
-        (vlax-for pt sel
-
-          (if (vlax-invoke lig 'intersectwith pt acextendnone)
-
-            (if (and (equal (vlax-get pt 'coordinates) (vlax-get lig 'endpoint)))
-
-              (or (caddr lst)
-
-                (setq tab (cons (vlax-get pt 'coordinates) tab))
-
-              )
-
-              (setq tab (cons (vlax-get pt 'coordinates) tab))
-
-            )
-
-          )
-
-        )
-
-        (vla-delete lig)
-
-        (and tab
-
-          (cond
-
-            ((and (>= ang 0)
-
-                  (< ang (/ pi 2))
-
-              )
-
-              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
-
-                                                    (< (cadr a) (cadr b))
-
-                                                    (< (car a) (car b))
-
-                                                  )
-
-                                     )
-
-                        )
-
-              )
-
-            )
-
-            ((and (>= ang (/ pi 2))
-
-                  (< ang pi)
-
-              )
-
-              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
-
-                                                    (< (cadr a) (cadr b))
-
-                                                    (> (car a) (car b))
-
-                                                  )
-
-                                     )
-
-                        )
-
-              )
-
-            )
-
-            ((and (>= ang pi)
-
-                  (< ang (+ pi (/ pi 2)))
-
-              )
-
-              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
-
-                                                    (> (cadr a) (cadr b))
-
-                                                    (> (car a) (car b))
-
-                                                  )
-
-                                     )
-
-                        )
-
-              )
-
-            )
-
-            (T
-
-              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
-
-                                                    (> (cadr a) (cadr b))
-
-                                                    (< (car a) (car b))
-
-                                                  )
-
-                                     )
-
-                        )
-
-              )
-
-            )
-
-          )
-
-          (foreach pt tab
-
-            (entmake (list (cons   0 "TEXT")
-
-                           (cons 100 "AcDbEntity")
-
-                           (cons 100 "AcDbText")
-
-                           (cons   1 (rtos patrick_g18a_num 2 0))
-
-                           (cons  10 (trans pt 1 0))
-
-                           (cons  11 (trans pt 1 0))
-
-                           (cons   8 patrick_g18a_calque)
-
-                           (cons  40 patrick_g18a_haut)
-
-                     )
-
-            )
-
-            (setq patrick_g18a_num (1+ patrick_g18a_num))
-
-          )
-
-        )
-
-        (setq lst (cdr lst))
-
-      )
-
-      (vla-delete sel)
-
-      (vla-endundomark doc)
 
     )
 
   )
 
+  (command "_.undo" "_end")
   (princ)
 
 )
 
-;;;
+; incrementation des sommets d'une polyligne avec des numéro seulement
 (defun c:G18a(/ cc haut num pt r)
 
   (princ "\nAttention au sens de la polyligne d'AXE!!!")
@@ -777,7 +599,7 @@
 
   )
 
-  (or (setq num (getint "\nNuméro de départ <1>: "))
+  (or (setq num (getint "\nNuméro de départ <A>: "))
 
     (setq num 1)
 
@@ -830,3 +652,63 @@
   (princ)
 
 )
+;; autre
+(defun c:tag ( / fun ins ocs str uxa )
+    (while
+        (not
+            (or (= "" (setq str (getstring "\nSpecify grid line tag: ")))
+                (wcmatch str "~*[~0-9]*")
+                (wcmatch str "~*[~a-zA-Z]*")
+            )
+        )
+        (princ "\nPlease enter either letters or numbers.")
+    )
+    (if (/= "" str)
+        (progn
+            (if (wcmatch str "~*[~0-9]*")
+                (setq fun (lambda ( x ) (itoa (1+ (atoi x)))))
+                (setq fun LM:A++)
+            )
+            (setq ocs (trans '(0.0 0.0 1.0) 1 0 t)
+                  uxa (angle '(0.0 0.0 0.0) (trans (getvar 'ucsxdir) 0 ocs t))
+            )
+            (while (setq ins (getpoint "\nSpecify point <Done>: "))
+                (entmake
+                    (list
+                       '(00 . "TEXT")
+                       '(72 . 4)
+                       '(73 . 0)
+                        (cons 001 str)
+                        (cons 050 uxa)
+                        (cons 007 (getvar 'textstyle))
+                        (cons 040 (getvar 'textsize))
+                        (cons 010 (trans ins 1 ocs))
+                        (cons 011 (trans ins 1 ocs))
+                        (cons 210 ocs)
+                    )
+                )
+                (setq str (fun str))
+            )
+        )
+    )
+    (princ)
+)
+
+;; Alpha++ inc -  Lee Mac
+;; Increments an alphabetical string by one, e.g. AZ => BA
+;; a - [str] alphabetical string
+;; works also with numbers in the string
+
+(defun A++ ( a )
+    (   (lambda ( f ) (vl-list->string (reverse (f (reverse (vl-string->list a)) t))))
+        (lambda ( l x )
+            (cond
+                (   (null l) (if x '(65) '(97)))
+                (   (= 090 (car l)) (cons 65 (f (cdr l)  t )))
+                (   (= 122 (car l)) (cons 97 (f (cdr l) nil)))
+                (   (cons (1+ (car l)) (cdr l)))
+            )
+        )
+    )
+)
+(princ)
