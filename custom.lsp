@@ -17,6 +17,8 @@
 ;;; vnp : verrouille ou déverrouille le calque np 
 ;;;
 ;;; repeat_offset : permet de faire un décaler multiple. décaler l'objet selon une liste de distance (mode cumul ou interval)
+;;;
+;;; T2M - convert individual Texts/Dtexts to individual MTexts
 
 
 ; vecteur
@@ -403,5 +405,428 @@
 
 )
 
+; Numero
+(defun C:numero (/)
+  (command "_.undo" "_group")
 
+  (princ "\nAttention au sens de la polyligne d'AXE!!!")
 
+  (while (not r)
+
+    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" (setq cc (getvar "clayer")) "> : ")))
+
+    (cond
+
+      ((eq r "")
+
+        (setq r cc)
+
+      )
+
+      ((not (tblsearch "layer" r))
+
+        (princ (strcat "\nCalque " r " inexistant."))
+
+        (setq r nil)
+
+      )
+
+    )
+
+  )
+
+  (or (setq num (getint "\n Indice de départ <A>: "))
+
+    (setq num A)
+
+  )
+
+  (or (setq haut (getreal "\nHauteur du texte <0.55>: "))
+
+    (setq haut 0.55)
+
+  )
+  (and  (setq ObjLwHaut (entsel "\nSélectionner l'AXE : "))
+
+        (setq ObjLwHaut (entget (car ObjLwHaut)))
+
+        (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
+
+    (progn
+      (princ "hello you")
+      ) ; fin progn
+      
+) ; fin and
+  
+  (command "_.undo" "_end")
+
+  					; fin
+  (princ)
+  
+) ; fin numero
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;http://cadxp.com/topic/29955-icrementation-texte-dans-lordre-dune-polyligne/
+(defun c:G18a()
+(vl-load-com)
+(princ "\nAttention au sens de la polyligne d'AXE!!!")
+(setq cc (getvar "clayer"))
+(setq r (strcase (getstring (strcat "\nCalque d'insertion de la numérotation: <" cc "> : "))))
+(if (= "" r)(setq r cc))
+(setvar "clayer" r)
+(setq num (getreal "\nNuméro de départ <1>: "))
+(if (= nil num)(setq num 1))
+(setq haut (getreal "\nHauteur du texte <1>: "))
+(if (= nil haut)(setq haut 1))
+(setq ObjLwHaut (car (entsel "\nSélectionner l'AXE : ")))
+(setq VlaObjLwHaut (vlax-ename->vla-object ObjLwHaut))
+(SommetLWPol (entget ObjLwHaut))
+(setq LstPointsLwHaut LstPointsLw)
+(setq NbreSommet (length LstPointsLwHaut))
+(setq lst (ssget "_f" LstPointsLwHaut (list (cons 0 "point"))))
+(setq nombreau (sslength lst))
+(setq indiceau 0)
+(repeat nombreau
+(setq ent (ssname lst indiceau))
+(setq x (list lst indiceau))
+(setq tl (vlax-get (vlax-ename->vla-object ent) 'coordinates))
+(setq resul (+ num indiceau))
+(command "_text" tl haut 0 (rtos resul 2 0))
+(setq indiceau (1+ indiceau))
+)
+)
+
+(defun c:G18a(/ ang cc doc esp haut js lig lst num pt1 pt2 r sel tab)
+
+  (vl-load-com)
+
+  (setq doc (vla-get-activedocument (vlax-get-acad-object)))
+
+  (if (zerop (getvar "tilemode"))
+
+    (setq esp (vla-get-paperspace doc))
+
+    (setq esp (vla-get-modelspace doc))
+
+  )
+
+  (or patrick_g18a_calque (setq patrick_g18a_calque (getvar "clayer")))
+
+  (or patrick_g18a_haut (setq patrick_g18a_haut 1))
+
+  (or patrick_g18a_num (setq patrick_g18a_num 1))
+
+  (princ "\nAttention au sens de la polyligne d'AXE!!!")
+
+  (while (not r)
+
+    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" patrick_g18a_calque "> : ")))
+
+    (cond
+
+      ((eq r "")
+
+        (setq r patrick_g18a_calque)
+
+      )
+
+      ((not (tblsearch "layer" r))
+
+        (princ (strcat "\nCalque " r " inexistant."))
+
+        (setq r nil)
+
+      )
+
+      (T
+
+        (setq patrick_g18a_calque r)
+
+      )
+
+    )
+
+  )
+
+  (and (setq num (getint (strcat "\nNuméro de départ <" (itoa patrick_g18a_num) ">: ")))
+
+    (setq patrick_g18a_num num)
+
+  )
+
+  (and (setq haut (getreal (strcat "\nHauteur du texte <" (rtos patrick_g18a_haut) ">: ")))
+
+    (setq patrick_g18a_haut haut)
+
+  )
+
+  (and  (setq ObjLwHaut (entsel "\nSélectionner l'AXE : "))
+
+        (setq ObjLwHaut (entget (car ObjLwHaut)))
+
+        (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
+
+    (progn
+
+      (vla-startundomark doc)
+
+      (setq lst (vl-remove-if-not '(lambda(x)(eq (car x) 10)) ObjLwHaut)
+
+            js (ssget "_x" '((0 . "POINT")))
+
+            sel (vla-get-activeselectionset doc)
+
+      )
+
+      (while (and js (cadr lst))
+
+        (setq tab nil
+
+              pt1 (cdar lst)
+
+              pt2 (cdadr lst)
+
+              ang (angle pt1 pt2)
+
+        )
+
+        (setq lig (vla-addline esp (vlax-3d-point (trans pt1 1 0)) (vlax-3d-point (trans pt2 1 0))))
+
+        (vlax-for pt sel
+
+          (if (vlax-invoke lig 'intersectwith pt acextendnone)
+
+            (if (and (equal (vlax-get pt 'coordinates) (vlax-get lig 'endpoint)))
+
+              (or (caddr lst)
+
+                (setq tab (cons (vlax-get pt 'coordinates) tab))
+
+              )
+
+              (setq tab (cons (vlax-get pt 'coordinates) tab))
+
+            )
+
+          )
+
+        )
+
+        (vla-delete lig)
+
+        (and tab
+
+          (cond
+
+            ((and (>= ang 0)
+
+                  (< ang (/ pi 2))
+
+              )
+
+              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
+
+                                                    (< (cadr a) (cadr b))
+
+                                                    (< (car a) (car b))
+
+                                                  )
+
+                                     )
+
+                        )
+
+              )
+
+            )
+
+            ((and (>= ang (/ pi 2))
+
+                  (< ang pi)
+
+              )
+
+              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
+
+                                                    (< (cadr a) (cadr b))
+
+                                                    (> (car a) (car b))
+
+                                                  )
+
+                                     )
+
+                        )
+
+              )
+
+            )
+
+            ((and (>= ang pi)
+
+                  (< ang (+ pi (/ pi 2)))
+
+              )
+
+              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
+
+                                                    (> (cadr a) (cadr b))
+
+                                                    (> (car a) (car b))
+
+                                                  )
+
+                                     )
+
+                        )
+
+              )
+
+            )
+
+            (T
+
+              (setq tab (vl-sort tab '(lambda(a b)(if (eq (car a) (car b))
+
+                                                    (> (cadr a) (cadr b))
+
+                                                    (< (car a) (car b))
+
+                                                  )
+
+                                     )
+
+                        )
+
+              )
+
+            )
+
+          )
+
+          (foreach pt tab
+
+            (entmake (list (cons   0 "TEXT")
+
+                           (cons 100 "AcDbEntity")
+
+                           (cons 100 "AcDbText")
+
+                           (cons   1 (rtos patrick_g18a_num 2 0))
+
+                           (cons  10 (trans pt 1 0))
+
+                           (cons  11 (trans pt 1 0))
+
+                           (cons   8 patrick_g18a_calque)
+
+                           (cons  40 patrick_g18a_haut)
+
+                     )
+
+            )
+
+            (setq patrick_g18a_num (1+ patrick_g18a_num))
+
+          )
+
+        )
+
+        (setq lst (cdr lst))
+
+      )
+
+      (vla-delete sel)
+
+      (vla-endundomark doc)
+
+    )
+
+  )
+
+  (princ)
+
+)
+
+;;;
+(defun c:G18a(/ cc haut num pt r)
+
+  (princ "\nAttention au sens de la polyligne d'AXE!!!")
+
+  (while (not r)
+
+    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" (setq cc (getvar "clayer")) "> : ")))
+
+    (cond
+
+      ((eq r "")
+
+        (setq r cc)
+
+      )
+
+      ((not (tblsearch "layer" r))
+
+        (princ (strcat "\nCalque " r " inexistant."))
+
+        (setq r nil)
+
+      )
+
+    )
+
+  )
+
+  (or (setq num (getint "\nNuméro de départ <1>: "))
+
+    (setq num 1)
+
+  )
+
+  (or (setq haut (getreal "\nHauteur du texte <1>: "))
+
+    (setq haut 1)
+
+  )
+
+  (and  (setq ObjLwHaut (entsel "\nSélectionner l'AXE : "))
+
+        (setq ObjLwHaut (entget (car ObjLwHaut)))
+
+        (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
+
+    (progn
+
+      (foreach pt (vl-remove-if-not '(lambda(x)(eq (car x) 10)) ObjLwHaut)
+
+        (entmake (list  (cons   0 "TEXT")
+
+                        (cons 100 "AcDbEntity")
+
+                        (cons 100 "AcDbText")
+
+                        (cons   1 (rtos num 2 0))
+
+                        (cons  10 (trans (cdr pt) 1 0))
+
+                        (cons  11 (trans (cdr pt) 1 0))
+
+                        (cons   8 r)
+
+                        (cons  40 haut)
+
+                 )
+
+        )
+
+        (setq num (1+ num))
+
+      )
+
+    )
+
+  )
+
+  (princ)
+
+)
