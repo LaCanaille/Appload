@@ -999,20 +999,20 @@
 
   
   (setq planiList (list
-"LAMBERT I" ;0
-"LAMBERT II" ;1
-"LAMBERT III" ;2
-"LAMBERT 93 CC41" ;3
-"LAMBERT 93 CC42" ;4
-"LAMBERT 93 CC43" ;5
-"LAMBERT 93 CC44" ;6
-"LAMBERT 93 CC45" ;7
-"LAMBERT 93 CC46" ;8
-"LAMBERT 93 CC47" ;9
-"LAMBERT 93 CC48" ;10
-"LAMBERT 93 CC49" ;11
-"LAMBERT 93" ;12
-"Indépendante")) ;13
+"Indépendante" ;0
+"LAMBERT I" ;1
+"LAMBERT II" ;2
+"LAMBERT III" ;3
+"LAMBERT 93 CC41" ;4
+"LAMBERT 93 CC42" ;5
+"LAMBERT 93 CC43" ;6
+"LAMBERT 93 CC44" ;7
+"LAMBERT 93 CC45" ;8
+"LAMBERT 93 CC46" ;9
+"LAMBERT 93 CC47" ;10
+"LAMBERT 93 CC48" ;11
+"LAMBERT 93 CC49" ;12
+"LAMBERT 93")) ;13
 
   
  ; (setq mPlaniList '("Aucun" "TERIA"))
@@ -1021,7 +1021,7 @@
   
   (setq transfoList (list " " "Lambert III"))
   
-  (setq altiList (list "NGF-IGN69" "NGF-IGN78" "Indépendante"))
+  (setq altiList (list " " "Indépendante" "NGF-IGN69" "NGF-IGN78" ))
 
   
   (setq mAltiList (list " " "TERIA Metropole" "TERIA Corse" "sur RN"))
