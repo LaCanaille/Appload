@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;;;;;;;;;;
+c;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;;;;;;;;;;
 ;;; V1 01/03/17
 ;;;;;;;;;;;;;;;;;;;;;;;;;;; Fonction principale :
 ;;;
@@ -40,6 +40,11 @@
 
 ;;; Regen() regeneration du dessin
 
+;;; FillInfoPres()
+; remplit les informations indice, planche, echelle, type de plan et date d edition
+; en fonction du titre de la présentation.
+; par défaut utilise la présentation choisie dans la liste déroulante
+
 ;;; Case(string which)
 ; change la casse d'une chaine de caractère
 ; which 0 met en majuscules
@@ -75,11 +80,10 @@
 
 
 (defun c:test()
-  
-  (princ "hello 312 pouet")
-  (princ (vl-string-subst "DP.dwg" ".dwg" "yopla.dwg"))
-(setq dim (getvar "screensize"))
-  (princ dim)
+  (setq test "1")
+  (if (getvar "ctab")
+ 	(setq test (getvar "ctab")))
+  (princ test)
 )
 
 
@@ -345,9 +349,9 @@
   
   (setq gabarit "CartoucheMesuralpes.dwt") ; gabarit cartouche dans le dossier des templates
   (setq page "TOP_A1_00200_01-01-2017_MODELE")
-  
+    
   (setq dcl_id (load_dialog "cartouche.dcl"))		;load dialog
- 
+      
   (if (not (new_dialog "cartouche" dcl_id)		;test for dialog
  
       );not
@@ -370,7 +374,6 @@
   (set_tile "Section" (setq Section (GetCustomNotNil "Section" target)))
   (set_tile "Parcelle" (setq Parcelle (GetCustomNotNil "Parcelle" target)))
   (set_tile "Objet1" (setq Objet1 (GetCustomNotNil "Objet1" target)))
-
 
   ; set the popup lists
   (popupVar) ; définition des listes déroulantes
@@ -395,7 +398,6 @@
      (mode_tile "PlaniDate" 0)
      (mode_tile "PlaniDate" 1)
   )
-
   
   (start_list "CoordTransformees")				;start the list box
   (mapcar 'add_list transfoList)				;fill the list box
@@ -418,7 +420,6 @@
        (mode_tile "RN" 0)
        (mode_tile "RN" 1)
      )
-  
 
   ;;;;;; propre à la présentation
   (setq presList (append '("Nouvelle") (layoutlist)))
@@ -426,7 +427,7 @@
   (mapcar 'add_list presList)				;fill the list box
   (end_list)
   (set_tile "Nouv" (setq Nouv "1"))
-  (set_tile "Presentation" (GetIndex "TitrePres" target presList)); "0");  par défaut propose une nouvelle présentation; 
+  (set_tile "Presentation" (GetIndex "TitrePres" target presList)); "0");  par défaut propose une nouvelle présentation
   (set_tile "Template" gabarit);  toujours par défaut
   (set_tile "Onglet" page);  toujours par défaut
   
@@ -438,13 +439,6 @@
   (set_tile "Indice" (setq Indice (GetCustomNotNil "Indice" target)))
   (set_tile "Planche" (setq Planche (GetCustomNotNil "Planche" target)))
   (set_tile "Echelle" (setq Echelle (GetCustomNotNil "Echelle" target)))
-
-  (set_tile "Lot" (setq Lot (GetCustomNotNil "Lot" target)))  ; optionnel. Seulement si choix DP10
-  (if (or (= "DP0" (GetCustomNotNil "Type" target)) (= "DP3" (GetCustomNotNil "Type" target))) 
-
-       (mode_tile "Lot" 0)
-       (mode_tile "Lot" 1)
-     )
 
   (setq Date (GetCustomNotNil "Date" target))
   (start_list "DateJ")			
@@ -458,7 +452,25 @@
   (start_list "DateA")			
   (mapcar 'add_list anneeList)			
   (end_list)
-  (set_tile "DateA" (GetIndexV (substr Date 7 4) anneeList))  
+  (set_tile "DateA" (GetIndexV (substr Date 7 4) anneeList))
+
+  ; test si sur onglet présentation on remplit les champs automatiquement
+  (if (getvar "ctab")
+    (progn
+ 	(setq val (getvar "ctab"))
+        (if ( /= "Model" val) ; si on n'est pas sur l'onglet Objet
+	  (progn
+	  	(set_tile "Presentation" (GetIndexV val presList)) ; on se met dans la liste déroulante sur la présentation en cours
+	  	(FillInfoPres)) ; si présentation selon gabarit, on remplit les informations
+	  )
+      ))
+ 
+  (set_tile "Lot" (setq Lot (GetCustomNotNil "Lot" target)))  ; optionnel. Seulement si choix DP10
+  (if (or (= "DP0" (GetCustomNotNil "Type" target)) (= "DP3" (GetCustomNotNil "Type" target))) 
+
+       (mode_tile "Lot" 0)
+       (mode_tile "Lot" 1)
+     )
   
   
   ; get the values !! important de sauvegarder les champs des edit_box
@@ -494,6 +506,12 @@
   )
   (action_tile "RN" "(setq RN $value)")
 
+  (action_tile "Presentation" ; on remplit automatiquement les champs selon le titre de la présentation sauf si Nouvelle
+
+    "(if (/= $value \"0\") 
+       (FillInfoPres))"
+  )
+  
   (action_tile "Plan" ; active ou désactive le champs Lot
 
     "(if (or (= $value \"25\") (= $value \"26\"))  
@@ -801,6 +819,38 @@
     
     ;; The following example regenerates the active viewport in the current drawing
     ;(vla-Regen doc acActiveViewport)
+)
+
+; remplit automatiquement les informations de la présentation sélectionnée.
+; Par défaut c'est la présentation choisie dans le menu déroulant
+; quand on sélectionne une présentation dans le menu déroulant, remplit automatiquement les champs correspondants :
+; indice, planche, échelle, type de plan et date d'édition (si présents dans le titre)
+(defun FillInfoPres ()
+  (setq sStr1(get_tile "Presentation")) ; nom de la présentation
+  (if(= sStr1 "")
+    (setq pres nil)
+    (setq pres (nth (atoi sStr1) presList))
+  )
+  (FillInfoPresV pres)
+)
+  
+(defun FillInfoPresV (pres)
+  (if (> (strlen pres) 25) 
+	(if (= (ascii "_") (vl-string-elt pres 3))  ; titre selon modèle ccar
+	    (progn
+		  (set_tile "Plan" (GetIndexV (substr pres 1 3) planListT))
+
+		  (set_tile "Indice" (setq Indice (substr pres 5 1)))
+		  (set_tile "Planche" (setq Planche (substr pres 6 1)))
+	      
+		  (set_tile "Echelle" (setq Echelle (itoa (atoi (substr pres 8 5)))))
+
+		  (set_tile "DateJ" (GetIndexV (substr pres 14 2) jourList))
+		  (set_tile "DateM" (GetIndexV (substr pres 17 2) moisList))
+		  (set_tile "DateA" (GetIndexV (substr pres 20 4) anneeList))	      
+	     )
+    )
+  )
 )
 
 ; change la casse d'une chaine de caractère
