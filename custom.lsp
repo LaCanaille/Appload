@@ -514,9 +514,9 @@
 
   )
 
-  (setq style (getstring "\nStyle du texte <Standard>: "))
+  (setq style (getstring "\nStyle du texte <style14>: "))
   (if (eq style "")
-	(setq style "Standard")
+	(setq style "style14")
   )
   (if (not (tblsearch "style" style))
     (setq style "Standard"))
