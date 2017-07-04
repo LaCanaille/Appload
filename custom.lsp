@@ -406,66 +406,6 @@
 
 )
 
-; Numero
-(defun C:numero (/)
-  (command "_.undo" "_group")
-
-  (princ "\nAttention au sens de la polyligne d'AXE!!!")
-
-  (while (not r)
-
-    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" (setq cc (getvar "clayer")) "> : ")))
-
-    (cond
-
-      ((eq r "")
-
-        (setq r cc)
-
-      )
-
-      ((not (tblsearch "layer" r))
-
-        (princ (strcat "\nCalque " r " inexistant."))
-
-        (setq r nil)
-
-      )
-
-    )
-
-  )
-
-  (or (setq num (getint "\n Indice de départ <A>: "))
-
-    (setq num A)
-
-  )
-
-  (or (setq haut (getreal "\nHauteur du texte <0.55>: "))
-
-    (setq haut 0.55)
-
-  )
-  (and  (setq ObjLwHaut (entsel "\nSélectionner l'AXE : "))
-
-        (setq ObjLwHaut (entget (car ObjLwHaut)))
-
-        (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
-
-    (progn
-      (princ "hello you")
-      ) ; fin progn
-      
-) ; fin and
-  
-  (command "_.undo" "_end")
-
-  					; fin
-  (princ)
-  
-) ; fin numero
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Incrementation lettre ou numero des sommets d'une polyligne
@@ -548,13 +488,21 @@
 
                         (cons  40 haut)
 
+			;justification bas droit : (optionnel)
+			;(cons 71 9)
+			(cons 72 2)
+			(cons 73 1)
                  )
 
         )
 	(setq ind (A++ ind))
       )
+         (princ "yoplaboum")
+        (setq ins_pt_cell (getpoint "\nPoint d'insertion haut gauche du tableau: "))
 
+      ;  (vla-addTable Space (vlax-3d-point ins_pt_cell) (+ 3 nb) 6 (+ h_t (* h_t 0.25)) w_c)
     )
+ 
 
   )
 
@@ -563,129 +511,7 @@
 
 )
 
-; incrementation des sommets d'une polyligne avec des numéro seulement
-(defun c:G18a(/ cc haut num pt r)
 
-  (princ "\nAttention au sens de la polyligne d'AXE!!!")
-
-  (while (not r)
-
-    (setq r (getstring T (strcat "\nCalque d'insertion de la numérotation: <" (setq cc (getvar "clayer")) "> : ")))
-
-    (cond
-
-      ((eq r "")
-
-        (setq r cc)
-
-      )
-
-      ((not (tblsearch "layer" r))
-
-        (princ (strcat "\nCalque " r " inexistant."))
-
-        (setq r nil)
-
-      )
-
-    )
-
-  )
-
-  (or (setq num (getint "\nNuméro de départ <A>: "))
-
-    (setq num 1)
-
-  )
-
-  (or (setq haut (getreal "\nHauteur du texte <1>: "))
-
-    (setq haut 1)
-
-  )
-
-  (and  (setq ObjLwHaut (entsel "\nSélectionner l'AXE : "))
-
-        (setq ObjLwHaut (entget (car ObjLwHaut)))
-
-        (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
-
-    (progn
-
-      (foreach pt (vl-remove-if-not '(lambda(x)(eq (car x) 10)) ObjLwHaut)
-
-        (entmake (list  (cons   0 "TEXT")
-
-                        (cons 100 "AcDbEntity")
-
-                        (cons 100 "AcDbText")
-
-                        (cons   1 (rtos num 2 0))
-
-                        (cons  10 (trans (cdr pt) 1 0))
-
-                        (cons  11 (trans (cdr pt) 1 0))
-
-                        (cons   8 r)
-
-                        (cons  40 haut)
-
-                 )
-
-        )
-
-        (setq num (1+ num))
-
-      )
-
-    )
-
-  )
-
-  (princ)
-
-)
-;; autre
-(defun c:tag ( / fun ins ocs str uxa )
-    (while
-        (not
-            (or (= "" (setq str (getstring "\nSpecify grid line tag: ")))
-                (wcmatch str "~*[~0-9]*")
-                (wcmatch str "~*[~a-zA-Z]*")
-            )
-        )
-        (princ "\nPlease enter either letters or numbers.")
-    )
-    (if (/= "" str)
-        (progn
-            (if (wcmatch str "~*[~0-9]*")
-                (setq fun (lambda ( x ) (itoa (1+ (atoi x)))))
-                (setq fun LM:A++)
-            )
-            (setq ocs (trans '(0.0 0.0 1.0) 1 0 t)
-                  uxa (angle '(0.0 0.0 0.0) (trans (getvar 'ucsxdir) 0 ocs t))
-            )
-            (while (setq ins (getpoint "\nSpecify point <Done>: "))
-                (entmake
-                    (list
-                       '(00 . "TEXT")
-                       '(72 . 4)
-                       '(73 . 0)
-                        (cons 001 str)
-                        (cons 050 uxa)
-                        (cons 007 (getvar 'textstyle))
-                        (cons 040 (getvar 'textsize))
-                        (cons 010 (trans ins 1 ocs))
-                        (cons 011 (trans ins 1 ocs))
-                        (cons 210 ocs)
-                    )
-                )
-                (setq str (fun str))
-            )
-        )
-    )
-    (princ)
-)
 
 ;; Alpha++ inc -  Lee Mac
 ;; Increments an alphabetical string by one, e.g. AZ => BA
