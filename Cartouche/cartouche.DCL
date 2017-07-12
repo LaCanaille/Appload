@@ -1,11 +1,9 @@
 cartouche : dialog {				//dialog name
       label = "Personnalisation du cartouche" ;		//give it a label
-	width = 150;
-	height = 10;
-	
-	: row {
 
-	: boxed_column {			//define boxed column
+// Dossier //
+           : row {
+           : boxed_column {			//define boxed column
         label = "&Dossier";			//give it a label
 
         // Dossier
@@ -99,11 +97,14 @@ cartouche : dialog {				//dialog name
 	edit_width = 90;
 	}
  
-        }					//fin colonne de gauche
-         
+        }
+           
+           } // fin dossier
 
-//// Rattachement. colonne de droite
-        : boxed_column {			//define boxed column
+
+           // Rattachement //
+          :row{
+          : boxed_column{			//define boxed column
         label = "&Rattachement";			//give it a label
 
         : row {
@@ -184,19 +185,17 @@ cartouche : dialog {				//dialog name
 	}
         }
           
-
         
-        } // fin colonne de droite
- 
+       }
+          } // fin rattachement
 
+           // Presentation //
 
-	} // end row
-
-	
-	: boxed_column{
-	label = "&Présentation";
-	
-	: row {
+           : row {
+           : boxed_column {
+           label = "&Présentation";
+           
+	   : row{
 	: text_part {			
      	label = " Présentation :";			
      	}
@@ -204,16 +203,10 @@ cartouche : dialog {				//dialog name
         key = "Presentation";
         width = 80;
         }
+        }
+        
+        :row {
         	
-	spacer_0;
-	spacer_0;
-	spacer_0;
-	spacer_0;
-		
-	spacer_0;
-	spacer_0;
-	spacer_0;
-	spacer_0;
         : toggle {
         key = "Nouv";
         //value = "1"; 
@@ -228,10 +221,6 @@ cartouche : dialog {				//dialog name
 	edit_width = 23;
 	is_enabled = true;
 	}
-	spacer_0;
-	spacer_0;
-	spacer_0;
-	spacer_0;
 	: edit_box
 	{
 	label = "onglet :";
@@ -242,8 +231,8 @@ cartouche : dialog {				//dialog name
 	is_enabled = true;
 	}	
         }
-        
-	: row {
+
+        : row {
         : text_part {			
      	label = " Type de plan :";			
      	}
@@ -253,9 +242,8 @@ cartouche : dialog {				//dialog name
         }
         
         }
-	
         
-	: row {
+        : row{
 	: edit_box
 	{
 	label = "Indice (Lettre) :";
@@ -289,26 +277,6 @@ cartouche : dialog {				//dialog name
 	fixed_width = true;
 	}
 
-	: edit_box
-	{
-	label = "DP10 : Nombre de lots (en lettres)";
-	key = "Lot";
-	alignment = right;
-	edit_limit = 25;
-	edit_width = 25;
-	width = 5;
-	fixed_width = true;
-	}
-	
-	spacer_0;
-	spacer_0;
-	spacer_0;
-	spacer_0;
-		
-	spacer_0;
-	spacer_0;
-	spacer_0;
-	spacer_0;
 
 	: text_part {			
      	label = " Date d'édition :";			
@@ -324,47 +292,37 @@ cartouche : dialog {				//dialog name
         }
 
         }
+
+        
+        :row{
+        : edit_box
+	{
+	label = "DP10 : Nombre de lots (en lettres)";
+	key = "Lot";
+	alignment = right;
+	edit_limit = 25;
+	edit_width = 25;
+	width = 5;
+	fixed_width = true;
+	}
+        }
+
+           
+           } // fin bowed_column
+           
+           } // fin row presentation
+
         : text_part {			
      	label = "";
      	}
         : text_part {			
-     	label = "\nNB : Si une nouvelle présentation est créée, elle le sera à partir du gabarit CartoucheMesuralpes.dwt localisé dans le dossier Template, en utilisant l'onglet TOP_A1_00200_01-01-2017_MODELE";			
+     	label = "\nNB : Si une nouvelle présentation est créée, elle le sera à partir du gabarit CartoucheMesuralpes.dwt";			
      	}
-
-//        : row {
-//        : toggle {
-//        key = "Check";				//give it a name
-//        label = "Vérifié par :";
-//        }
-//        : edit_box
-//	{
-//	key = "CheckBy";
-//	edit_limit = 30;
-//	edit_width = 30;
-//	}
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//	spacer_0;
-//        }
-	
-	}
-
- 
-     ok_cancel ;				//predifined OK/Cancel
+     	: text_part {			
+     	label = "localisé dans le dossier Template, en utilisant l'onglet TOP_A1_00200_01-01-2017_MODELE";			
+     	}
+           
+           ok_cancel ;				//predifined OK/Cancel
+           
      					
-     }						//end dialog
+     }	
