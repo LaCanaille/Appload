@@ -498,7 +498,7 @@
 	(setq ind (A++ ind))
       )
          (princ "yoplaboum")
-        (setq ins_pt_cell (getpoint "\nPoint d'insertion haut gauche du tableau: "))
+       ; (setq ins_pt_cell (getpoint "\nPoint d'insertion haut gauche du tableau: "))
 
       ;  (vla-addTable Space (vlax-3d-point ins_pt_cell) (+ 3 nb) 6 (+ h_t (* h_t 0.25)) w_c)
     )
