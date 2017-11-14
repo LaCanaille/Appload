@@ -25,7 +25,7 @@
 
 ; vecteur
 (defun c:vect ()
-  (vectdim 0.1 0.1)
+  (vectdim 0.3 0.3)
 )
 
 (defun vectdim (width dist / pt1 pt2 pt3)
@@ -87,6 +87,8 @@
 ; creation porte simple, en 3 points
 (defun c:porte (/ pt1 pt2 ext angside edpline arc sel angext)
 
+  ;(princ "ici3\n")
+  
   (command "_.undo" "_group")
 
   (setq	pt1	(getpoint "\nSpécifiez le premier point: ")
@@ -129,14 +131,21 @@
     (command "_.arc" "_c" "_none" pt1 ext pt2)
     (command "_.arc" "_c" "_none" pt1 pt2 ext)
   )
-
-  (setq arc (entlast))
-
-  (if (zerop (getvar "peditaccept"))
-    (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
-    (command "_.pedit" "_m" arc edpline "" "_j" "" "")
+  (setq ltyp "CACHE2")
+  (if (not (tblsearch "ltype" ltyp))
+    (command "._linetype" "_load" ltyp "Acadiso.lin" "")
+  )
+  (if (tblsearch "ltype" ltyp)
+    (command "_.chprop" "_last" "" "_ltype" ltyp "")
   )
 
+  ; pour lier la porte et l'arc ensemble - annule le style CACHEX2
+;;;  (setq arc (entlast))  
+;;;  (if (zerop (getvar "peditaccept"))
+;;;    (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
+;;;    (command "_.pedit" "_m" arc edpline "" "_j" "" "")
+;;;  )
+  
   (command "_.undo" "_end")
 
   (princ)
