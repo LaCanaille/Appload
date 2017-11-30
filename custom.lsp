@@ -87,7 +87,6 @@
 ; creation porte simple, en 3 points
 (defun c:porte (/ pt1 pt2 ext angside edpline arc sel angext)
 
-  ;(princ "ici3\n")
   
   (command "_.undo" "_group")
 
@@ -131,13 +130,7 @@
     (command "_.arc" "_c" "_none" pt1 ext pt2)
     (command "_.arc" "_c" "_none" pt1 pt2 ext)
   )
-  (setq ltyp "CACHE2")
-  (if (not (tblsearch "ltype" ltyp))
-    (command "._linetype" "_load" ltyp "Acadiso.lin" "")
-  )
-  (if (tblsearch "ltype" ltyp)
-    (command "_.chprop" "_last" "" "_ltype" ltyp "")
-  )
+  (command "_.chprop" "_last" "" "_ltype" "CACHEX2" "")
 
   ; pour lier la porte et l'arc ensemble - annule le style CACHEX2
 ;;;  (setq arc (entlast))  
@@ -423,7 +416,8 @@
 
 ;;; place à chaque sommet d'une polyligne une chaine de caractère qui s'incrémente
 ; Fonctionne avec lettres et chiffres
-(defun c:inc(/ cc haut ind pt r)
+(defun c:inca(/ cc haut ind pt r style ObjLwHaut nbPoints i ind itab ins_pt_cell liste nl acadObject doc ColWidth RowHeight NumColumns NumRows ColWidth
+	      column row textsize doc modelSpace vlaTableau)
   (command "_.undo" "_group")
 
   (princ "\nAttention au sens de la polyligne d'AXE!!!")
@@ -477,6 +471,9 @@
         (eq (cdr (assoc 0 ObjLwHaut)) "LWPOLYLINE")
 
     (progn
+      (setq nbPoints 0)
+      (setq liste nil)
+      
       (foreach pt (vl-remove-if-not '(lambda(x)(eq (car x) 10)) ObjLwHaut)
 
         (entmake (list  (cons   0 "TEXT")
@@ -504,13 +501,80 @@
                  )
 
         )
-	(setq ind (A++ ind))
+	
+	(setq liste (cons ind liste))
+	(setq liste (cons (rtos (cadr pt) 2 2) liste)) ; x   pt (num x y)
+	(setq liste (cons (rtos (caddr pt) 2 2) liste)); y
+	(setq ind (A++ ind)
+	      nbPoints (+ 1 nbPoints)
+	      )
+	
       )
-         (princ "yoplaboum")
-       ; (setq ins_pt_cell (getpoint "\nPoint d'insertion haut gauche du tableau: "))
+       (setq liste (reverse liste))
+      
+       (setq itab (getstring "\nVoulez-vous insérer le tableau? <O>: "))
+       (if (eq itab "")
+	 (setq itab "O")
+       )
+      
+	(if (or (eq (strcase itab nil) "O") (eq (strcase itab nil) "OUI"))
+			(progn
+			  (setq	ins_pt_cell (getpoint "\nPoint d'insertion haut gauche du tableau: " ) )
+			  (princ "on imprime")
+			  (setq acadObj (vlax-get-acad-object))
+    			  (setq doc (vla-get-ActiveDocument acadObj))
+			  (setq modelSpace (vla-get-ModelSpace doc))
+			  (setq NumRows (+ 2 nbPoints))	; 2 lignes de titre + total
+			  (setq NumColumns 3)
+			  (setq textsize (getvar "textsize"))          ; Voir cette variable qui contrôle la hauteur du texte
+   			  (setq RowHeight (* 1.5 textsize))
+  			  (setq ColWidth (* 10.0 RowHeight))   
+		
+			  ;(setq	vlaTableau (vla-AddTable ModelSpace	 vlaPoint3D NumRows	 NumColumns RowHeight	 ColWidth ) )
 
-      ;  (vla-addTable Space (vlax-3d-point ins_pt_cell) (+ 3 nb) 6 (+ h_t (* h_t 0.25)) w_c)
-    )
+			  (setq vlaTableau (vla-addTable modelSpace (vlax-3d-point ins_pt_cell) NumRows NumColumns RowHeight ColWidth ));RowHeight ColWidth))
+			  (vla-SetTextStyle vlaTableau (+ acDataRow acTitleRow acHeaderRow) "17")
+
+			  ;--- remplissage du tableau --- ;
+
+			   ;; Ligne 0
+ 
+			   (setq row 0)
+			 
+			   (setq column 0)
+			 
+			   (SetCellProperties vlaTableau row column "Coordonnées des points" textsize acMiddleCenter nil)
+			 
+			 
+			   ;; Ligne 1
+			 
+			   (setq row 1)
+			 
+			   (SetCellProperties vlaTableau row 0 "MAT" textsize acMiddleCenter (cons acHorzBottom acLnWt040))
+			   (SetCellProperties vlaTableau row 1 "X" textsize acMiddleCenter (cons acHorzBottom acLnWt040))
+			   (SetCellProperties vlaTableau row 2 "Y" textsize acMiddleCenter (cons acHorzBottom acLnWt040))
+			 
+ 			     ;; Lignes de résultat
+ 
+			   (setq i 0)
+			 
+			   (while (< i nbPoints)
+			 
+			      (setq row (+ i 2))
+			      (setq nl (* 3 i))
+			      (SetCellProperties vlaTableau row 0 (nth nl liste) textsize acMiddleCenter nil) ; nom
+			      (SetCellProperties vlaTableau row 1 (nth (+ 1 nl) liste) textsize acMiddleCenter nil) ; X
+			      (SetCellProperties vlaTableau row 2 (nth (+ 2 nl) liste) textsize acMiddleCenter nil) ; Y
+
+			      (setq i (1+ i))
+			 
+			   )
+			  ;-- Fin écriture tableau --;
+			  
+			)
+		  )
+
+	    )
  
 
   )
@@ -539,4 +603,41 @@
         )
     )
 )
-(princ)
+
+
+   ;; Gère les propriétés populaires des cellules d'un tableau
+ 
+   ;;    vlaTableau Row Column : Obligatoire, les autres sont facultatifs
+ 
+   ;;    Row, Column : INT, base 0
+ 
+   ;;    Alignment: INT,
+ 
+   ;;    LineWeightPair: nil, sinon (cons "AcGridLineType enum" "acad_lweight enum"), soit (cons Position Épaisseur)
+ 
+   ;; Support pour Acad2006 et Acad2009
+(defun SetCellProperties (
+ 
+   vlaTableau Row Column Texte TextHeight Alignment LineWeightPair
+ 
+   )
+ 
+   (if LineWeightPair (vla-SetCellGridLineWeight vlaTableau Row Column (car LineWeightPair) (cdr LineWeightPair)))
+ 
+   (if Alignment (vla-SetCellAlignment vlaTableau Row Column Alignment))
+ 
+   (if TextHeight (vla-SetCellTextHeight vlaTableau Row Column TextHeight))
+ 
+   (if Texte
+ 
+      (if vla-SetCellValue
+ 
+         (vla-SetCellValue vlaTableau Row Column Texte) ; AutoCAD 2009
+ 
+         (vla-SetText vlaTableau Row Column Texte)      ; AutoCAD 2006
+ 
+      )
+ 
+   )
+ 
+)
