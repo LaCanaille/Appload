@@ -1,5 +1,5 @@
 c;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;;;;;;;;;;
-;;; V1 01/03/17
+;;; V4 07/12/12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;; Fonction principale :
 ;;;
 ;;; ccar (createCartouche) : personnalisation des proprietes custom du dessin courant, pour remplir les champs du cartouche.

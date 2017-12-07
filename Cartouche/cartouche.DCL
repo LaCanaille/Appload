@@ -1,3 +1,5 @@
+// V4 07/12/17
+
 cartouche : dialog {				//dialog name
       label = "Personnalisation du cartouche" ;		//give it a label
 
