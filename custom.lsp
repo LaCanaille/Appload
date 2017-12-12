@@ -20,7 +20,7 @@
 ;;;
 ;;; T2M - convert individual Texts/Dtexts to individual MTexts
 ;;;
-;;; inc : numérote avec incrémentation les sommets d'une polyligne, avec des chiffres ou des lettres
+;;; inc : numérote avec incrémentation les sommets d'une polyligne, avec des chiffres ou des lettres, et propose d'écrire le tableau de coordonnées des sommets
 
 
 ; vecteur
@@ -416,8 +416,8 @@
 
 ;;; place à chaque sommet d'une polyligne une chaine de caractère qui s'incrémente
 ; Fonctionne avec lettres et chiffres
-(defun c:inca(/ cc haut ind pt r style ObjLwHaut nbPoints i ind itab ins_pt_cell liste nl acadObject doc ColWidth RowHeight NumColumns NumRows ColWidth
-	      column row textsize doc modelSpace vlaTableau)
+(defun c:inc(/ cc haut ind pt r style ObjLwHaut nbPoints i ind itab ins_pt_cell liste nl acadObject doc ColWidth RowHeight NumColumns NumRows ColWidth
+	      column row textsize doc modelSpace vlaTableau w)
   (command "_.undo" "_group")
 
   (princ "\nAttention au sens de la polyligne d'AXE!!!")
@@ -446,7 +446,7 @@
 
   )
 
-  (setq ind (getstring "\nLettre de départ <A>: "))
+  (setq ind (getstring "\nLettre/Indice de départ <A>: "))
   (if (eq ind "")
 	(setq ind "A")
   )
@@ -520,22 +520,25 @@
 	(if (or (eq (strcase itab nil) "O") (eq (strcase itab nil) "OUI"))
 			(progn
 			  (setq	ins_pt_cell (getpoint "\nPoint d'insertion haut gauche du tableau: " ) )
-			  (princ "on imprime")
 			  (setq acadObj (vlax-get-acad-object))
     			  (setq doc (vla-get-ActiveDocument acadObj))
 			  (setq modelSpace (vla-get-ModelSpace doc))
 			  (setq NumRows (+ 2 nbPoints))	; 2 lignes de titre + total
 			  (setq NumColumns 3)
-			  (setq textsize (getvar "textsize"))          ; Voir cette variable qui contrôle la hauteur du texte
-   			  (setq RowHeight (* 1.5 textsize))
-  			  (setq ColWidth (* 10.0 RowHeight))   
-		
-			  ;(setq	vlaTableau (vla-AddTable ModelSpace	 vlaPoint3D NumRows	 NumColumns RowHeight	 ColWidth ) )
-
+			  
+			  (setq textsize 0.34)          ; Voir cette variable qui contrôle la hauteur du texte
+			  ;(setvar "textsize" 0.4)
+   			  (setq RowHeight 0.6) ;(* 1.7 textsize))     ;0.57
+			  (setq w  (max (strlen (nth 1 liste)) (strlen (nth 2 liste))))
+			  (setq w (+ 4 w))
+  			  (setq ColWidth (* w textsize)) ;(* 11 textsize))    ; 4.8
+	
+			  (AddMyTabStyle textsize)
+			  (setvar "ctablestyle" "myTableStyle")
 			  (setq vlaTableau (vla-addTable modelSpace (vlax-3d-point ins_pt_cell) NumRows NumColumns RowHeight ColWidth ));RowHeight ColWidth))
-			  (vla-SetTextStyle vlaTableau (+ acDataRow acTitleRow acHeaderRow) "17")
 
 			  ;--- remplissage du tableau --- ;
+			  (vla-setcolumnwidth vlaTableau 0 (* textsize (+ 4 (strlen (nth 0 liste)))) )
 
 			   ;; Ligne 0
  
@@ -544,7 +547,6 @@
 			   (setq column 0)
 			 
 			   (SetCellProperties vlaTableau row column "Coordonnées des points" textsize acMiddleCenter nil)
-			 
 			 
 			   ;; Ligne 1
 			 
@@ -641,3 +643,23 @@
    )
  
 )
+
+;;; TableStyle personnel
+(defun AddMyTabStyle (textsize / docObj tblObj tblStlObj)
+
+  (setq docObj (vla-get-activedocument (vlax-get-acad-object)))
+  (setq tblStlObj
+    (vla-addobject
+      (vla-add (vla-get-dictionaries docObj) "ACAD_TABLESTYLE")
+      "myTableStyle"
+      "AcDbTableStyle"
+    )
+  )  
+  (vla-put-horzcellmargin tblStlObj 0.06)
+  (vla-put-vertcellmargin tblStlObj 0.06)
+  (vla-settextheight tblStlObj (+ acDataRow acTitleRow acHeaderRow) textsize)
+  
+  (vla-settextstyle tblStlObj (+ acDataRow acTitleRow acHeaderRow) "Standard")
+  (princ)
+  )
+
