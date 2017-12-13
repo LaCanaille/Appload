@@ -1,5 +1,5 @@
-c;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;;;;;;;;;;
-;;; V1 01/03/17
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;;;;;;;;;;
+;;; V4 07/12/12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;; Fonction principale :
 ;;;
 ;;; ccar (createCartouche) : personnalisation des proprietes custom du dessin courant, pour remplir les champs du cartouche.
@@ -910,7 +910,7 @@ c;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;
     )
  (setq str (vl-string-trim " " str)) ; suppression des espaces au début et à la fin
  (setq int (vl-string-position (ascii "-") str))
-  (if (or (vl-string-position (ascii " ") str) (vl-string-position (ascii "-") str) (vl-string-position (ascii ",") str) (vl-string-position (ascii ".") str) (vl-string-position (ascii ";") str))
+  (if (or (vl-string-position (ascii " ") str) (vl-string-position (ascii "-") str) (vl-string-position (ascii ",") str) (vl-string-position (ascii ".") str) (vl-string-position (ascii ";") str) (vl-string-position (ascii "/") str))
     T
     nil
     )
@@ -1013,6 +1013,7 @@ c;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;
 "POCHETTES DP";26
 "PLAN DE PIQUETAGE";27
 "ÉPURE D'IMPLANTATION";28
+"ALIGNEMENT";29
 ))
 
   (setq planListT (list ; type 3 lettres
@@ -1045,6 +1046,7 @@ c;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Cartouche ;;;;;;;;;;
 "DP3";26
 "PIQ";27
 "EPU";28
+"ALI";29
 ))		   
 
   

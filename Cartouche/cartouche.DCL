@@ -1,3 +1,5 @@
+// V4 07/12/17
+
 cartouche : dialog {				//dialog name
       label = "Personnalisation du cartouche" ;		//give it a label
 
@@ -37,8 +39,8 @@ cartouche : dialog {				//dialog name
 	label = "Département :";
 	key = "Departement";
 	alignment = centered;
-	edit_limit = 30;
-	edit_width = 30;
+	edit_limit = 50;
+	edit_width = 50;
 	}
 
 	: edit_box
@@ -46,8 +48,8 @@ cartouche : dialog {				//dialog name
 	label = "Commune :";
 	key = "Commune";
 	alignment = centered;
-	edit_limit = 30;
-	edit_width = 30;
+	edit_limit = 50;
+	edit_width = 50;
 	}
 
 	: edit_box
@@ -55,8 +57,8 @@ cartouche : dialog {				//dialog name
 	label = "Commune déléguée de :";
 	key = "CommuneDeleguee";
 	alignment = centered;
-	edit_limit = 30;
-	edit_width = 30;
+	edit_limit = 50;
+	edit_width = 50;
 	}
 
 	: edit_box
@@ -64,27 +66,27 @@ cartouche : dialog {				//dialog name
 	label = "Lieu-dit :";
 	key = "Lieu-dit";
 	alignment = centered;
-	edit_limit = 30;
-	edit_width = 30;
+	edit_limit = 50;
+	edit_width = 50;
 	}
 	
 	: row {
 	: edit_box
 	{
-	label = "Section :";
+	label = "Section(s) :";
 	key = "Section";
 	alignment = left;
-	edit_limit = 10;
-	edit_width = 10;
+	edit_limit = 30;
+	edit_width = 30;
 	}
 
 	: edit_box
 	{
-	label = "Parcelle :";
+	label = "Parcelle(s) :";
 	key = "Parcelle";
-	alignment = left;
-	edit_limit = 30;
-	edit_width = 30;
+	alignment = right;
+	edit_limit = 50;
+	edit_width = 50;
 	}
 	}
 
@@ -93,8 +95,8 @@ cartouche : dialog {				//dialog name
 	label = "Objet :";
 	key = "Objet1";
 	alignment = centered;
-	edit_limit = 90;
-	edit_width = 90;
+	edit_limit = 110;
+	edit_width = 110;
 	}
  
         }
@@ -114,7 +116,7 @@ cartouche : dialog {				//dialog name
      	}					
         : popup_list {			
         key = "Planimetrie";
-        width = 35;
+        width = 10;
         }				
         }
 
@@ -136,7 +138,7 @@ cartouche : dialog {				//dialog name
 	{
 	label = "le (jj/mm/aaaa):";
 	key = "PlaniDate";
-	alignment = centered;
+	alignment = right;
 	edit_limit = 11;
 	edit_width = 11;
 	is_enabled = false;
@@ -151,7 +153,7 @@ cartouche : dialog {				//dialog name
      	}					
         : popup_list {
         key = "CoordTransformees";
-        width = 30;
+        width = 15;
         }				
         }
 
@@ -162,7 +164,7 @@ cartouche : dialog {				//dialog name
      	}					
         : popup_list {			
         key = "Altimetrie";
-        width = 30;
+        width = 15;
         }
         }
 
