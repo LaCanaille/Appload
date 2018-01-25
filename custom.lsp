@@ -416,6 +416,8 @@
 
 ;;; place à chaque sommet d'une polyligne une chaine de caractère qui s'incrémente
 ; Fonctionne avec lettres et chiffres
+; propose d'écrire le tableau de points
+; ATTENTION cela crée et donne les coordonnées par rapport à une polyligne dans le SCU général! si vous avez changé de SCU cela ne marchera pas
 (defun c:inc(/ cc haut ind pt r style ObjLwHaut nbPoints i ind itab ins_pt_cell liste nl acadObject doc ColWidth RowHeight NumColumns NumRows ColWidth
 	      column row textsize doc modelSpace vlaTableau w)
   (command "_.undo" "_group")
