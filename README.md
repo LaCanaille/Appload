@@ -1,4 +1,0 @@
-# Appload
-fonctions autolisp
-
-hello 
