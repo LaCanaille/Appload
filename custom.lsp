@@ -130,9 +130,9 @@
     (command "_.arc" "_c" "_none" pt1 ext pt2)
     (command "_.arc" "_c" "_none" pt1 pt2 ext)
   )
-  (command "_.chprop" "_last" "" "_ltype" "CACHEX2" "")
+  (command "_.chprop" "_last" "" "_ltype" "CACHE2" "")
 
-  ; pour lier la porte et l'arc ensemble - annule le style CACHEX2
+  ; pour lier la porte et l'arc ensemble - annule le style CACHE2
 ;;;  (setq arc (entlast))  
 ;;;  (if (zerop (getvar "peditaccept"))
 ;;;    (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
