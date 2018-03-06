@@ -12,6 +12,9 @@
 ;;;
 ;;; porte : pour dessiner une porte. spécifiez le premier point, le second point, puis cliquez du côté où ouvrir la porte
 ;;;
+;;; portec : pour dessiner une porte avec embrasure. spécifiez le premier point, le second point, puis cliquez du côté où ouvrir la porte ainsi que du côté où dessiner les embrasures.
+;;; Indiquez les dimensions du cadre
+;;;
 ;;; spécial pour Mathilde pour la gestion du calque np (pourrait s'appliquer à d'autres calques
 ;;; gnp : gel ou dégèle le calque np
 ;;; vnp : verrouille ou déverrouille le calque np 
@@ -23,7 +26,7 @@
 ;;; inc : numérote avec incrémentation les sommets d'une polyligne, avec des chiffres ou des lettres, et propose d'écrire le tableau de coordonnées des sommets
 
 
-; vecteur
+;;; vecteur ;;;
 (defun c:vect ()
   (vectdim 0.3 0.3)
 )
@@ -41,17 +44,22 @@
 
      (setq pt3  (polar pt2 (angle pt2 pt1) dist) ) 
 
-   (setq ocmd (getvar "cmdecho"))
-   (setvar "CMDECHO" 0)
+   ;; récupérer les valeurs de variables système
+   (setq osm  (getvar "osmode")
+	 echo (getvar "cmdecho")
+   )
+   (setvar "CMDECHO" 0)  
    (command "_.pline" "_none" pt2 "_width" "0" width "_none" pt3 "_width" "0" "0" "_none"  pt1 "")
-   (setvar "CMDECHO" ocmd)
+  ;; restaurer les valeurs des variables système
+   (setvar "osmode" osm)
+   (setvar "cmdecho" echo)
    )
 )
 
 (princ)					; fin silencieux
-)
+) ; fin vect
 
-; vectech prend en compte une échelle
+;;; vectech prend en compte une échelle ;;;
 (defun vectech (width dist ech / pt1 pt2 pt3 pt4)
   
     
@@ -65,33 +73,41 @@
      (setq long (* (distance pt1 pt2) ech))
      (setq pt3  (polar pt1 (angle pt1 pt2) (- long dist) ))
      (setq pt4  (polar pt1 (angle pt1 pt2) long) )
-
-   (setq ocmd (getvar "cmdecho"))
+   ;; récupérer les valeurs de variables système
+   (setq osm  (getvar "osmode")
+	 echo (getvar "cmdecho")
+   )
    (setvar "CMDECHO" 0)
+     
    (command "_.pline" "_none" pt4 "_width" "0" width "_none" pt3 "_width" "0" "0" "_none"  pt1 "")
-   (setvar "CMDECHO" ocmd)
+  ;; restaurer les valeurs des variables système
+   (setvar "osmode" osm)
+   (setvar "cmdecho" echo)
    )
 )
 
 (princ)					; fin silencieux
-)
+) ; fin vectech
 
 
 
 
-; cut in one point
+;;; cut in one point ;;
 (defun c:BR ()
   (command "_break" pause "_f" pause (getvar "lastpoint"))(princ))
 
+;;; creation porte simple, en 3 points ;;;
 
-; creation porte simple, en 3 points
-(defun c:porte (/ pt1 pt2 ext angside edpline arc sel angext)
-
-  
+(defun c:porte (/ pt1 pt2 ext angside angext pi4 dir edpline arc sel)
+  ;; récupérer les valeurs de variables système
+  (setq	osm  (getvar "osmode")
+	echo (getvar "cmdecho")
+  )
+  (setvar "CMDECHO" 0)
   (command "_.undo" "_group")
-
+  
   (setq	pt1	(getpoint "\nSpécifiez le premier point: ")
-	pt2	(getpoint pt1 "\nSpécifiez le second point: ")
+	pt2	(getpoint "\nSpécifiez le second point: ")
 	ext	(getpoint "\nSpécifiez le côté de l'ouverture: ")
 	angside	(angle pt1 pt2)
 	angext	(angle pt1 ext)
@@ -102,28 +118,28 @@
 
     (progn
       (if (and (< angext angside) (> angext (- angside PI)))
-	(setq dir (- pi4))
-	(setq dir (+ pi4))
+	(setq dir (- 1))
+	(setq dir (+ 1))
       )
 
     )
 
     (progn				; angside > pi
       (if (and (> angext angside) (< angext (+ angside PI)))
-	(setq dir (+ pi4))
-	(setq dir (- pi4))
+	(setq dir (+ 1))
+	(setq dir (- 1))
 
       )
     )
 
   )
 
+  (setq dir (* dir pi4))
   (setq angside (+ angside dir))
   (setq ext (polar pt1 angside (distance pt1 pt2)))
-
+  
   (command "_.pline" "_none" pt1 "_none" ext "")
   (setq edpline (entlast))		; mémorise pline
-
 
   (if (< dir 0)
 
@@ -138,17 +154,155 @@
 ;;;    (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
 ;;;    (command "_.pedit" "_m" arc edpline "" "_j" "" "")
 ;;;  )
-  
-  (command "_.undo" "_end")
 
+  (command "_.undo" "_end")
+  
+  ;; restaurer les valeurs des variables système
+  (setvar "osmode" osm)
+  (setvar "cmdecho" echo)
   (princ)
 
-)
+); fin porte
 
 
+;;;;;;;;;;;;; creation de porte avec structure embrasure rectangle ;;;
+(defun c:portec (/ pt1 pt2 ext extc pi2 pi4 angside andext dir dirc dircpi2 pt11 pt12 pt13 pt21 pt22 pt23 a b edpline arc sel)
+  ;; récupérer les valeurs de variables système
+  (setq	osm  (getvar "osmode")
+	echo (getvar "cmdecho")
+  )
+  (setvar "CMDECHO" 0)
+  (command "_.undo" "_group")
+
+    ; paramètres cadre par défaut
+  (if (or (/= (type *la*) 'REAL) (<= *la* 0)) (setq *la* 0.05))
+  (if (or (/= (type *ht*) 'REAL) (<= *ht* 0)) (setq *ht* 0.05))
+ 
+  ; points porte
+   (while
+        (and
+        (princ (strcat "\nDimensions embrasures L*ht <" (rtos *la*)"*"(rtos *ht*)">: "
+		       "\nSpécifiez le premier point ou Entrée pour changer les paramètres")
+        )
+        (not (setq pt1 (getpoint)))
+        ) ; fin and
+
+       (setq *la*
+	 (cond
+	   ((getreal (strcat "\nLargeur cadre <" (rtos *la*) ">: "))); if User types something, use it
+	   (*la*)
+	   ) ;cond
+	);setq
+
+    	(setq *ht*
+	 (cond
+	   ((getreal (strcat "\nHauteur cadre <" (rtos *ht*) ">: "))); if User types something, use it
+	   (*ht*)
+	   ) ;cond
+	);setq
+
+     ) ; fin while
+
+  (setq
+	pt2	(getpoint pt1 "\nSpécifiez le second point: ")
+	ext	(getpoint "\nSpécifiez le côté de l'ouverture: ")
+	extc	(getpoint "\nSpécifiez le côté des embrasures ")
+  )
+
+  (setq angside	(angle pt1 pt2)
+	angext	(angle pt1 ext)
+	angextc	(angle pt1 extc)
+	pi4	(/ PI 4)
+	pi2 	(/ PI 2)
+  )
+
+  ; direction porte
+  (if (> angside PI)
+
+    (progn
+      (if (and (< angext angside) (> angext (- angside PI)))
+	(setq dir (- 1))
+	(setq dir (+ 1))
+      )
+    )
+
+    (progn				; angside > pi
+      (if (and (> angext angside) (< angext (+ angside PI)))
+	(setq dir (+ 1))
+	(setq dir (- 1))
+      )
+    )
+
+  )
+
+  ; direction embrasure
+  (if (> angside PI)
+
+    (progn
+      (if (and (< angextc angside) (> angextc (- angside PI)))
+	(setq dirc (- 1))
+	(setq dirc (+ 1))
+      )
+    )
+
+    (progn				; angside > pi
+      (if (and (> angextc angside) (< angextc (+ angside PI)))
+	(setq dirc (+ 1))
+	(setq dirc (- 1))
+      )
+    )
+
+  )
+
+  ; dessin cadre
+  (setq dircpi2 (+ angside (* dirc pi2)))
+  (setq pt11 (polar pt1 angside *la*)
+	pt12 (polar pt11 dircpi2 *ht*)
+	pt13 (polar pt1  dircpi2 *ht*)
+	a    (polar pt11 dircpi2 (/ *ht* 2))
+	pt21 (polar pt2 (+ PI angside) *la*)
+	pt22 (polar pt21 dircpi2 *ht*)
+	pt23 (polar pt2  dircpi2 *ht*)
+	b    (polar pt21 dircpi2 (/ *ht* 2))
+	)
+
+  (command "_.pline" "_none" pt1 "_none" pt11 "_none" pt12 "_none" pt13 "c" )
+  (command "._hatch" "_S"  (entlast) "" )
+
+  (command "_.pline" "_none" pt2 "_none" pt21 "_none" pt22 "_none" pt23 "c" )
+  (command "._hatch" "_S" (entlast) "")
+  ;dessin porte
+
+  (setq angside (+ angside (* pi4 dir)))
+  (setq ext (polar a angside (distance a b)))
+
+  (command "_.pline" "_none" a "_none" ext "")
+  (setq edpline (entlast))		; mémorise pline
+
+  (if (< dir 0)
+
+    (command "_.arc" "_c" "_none" a ext b)
+    (command "_.arc" "_c" "_none" a b ext)
+  )
+  ;(command "_.chprop" "_last" "" "_ltype" "CACHE2" "")
+
+  ; pour lier la porte et l'arc ensemble - annule le style CACHE2
+  (setq arc (entlast))  
+  (if (zerop (getvar "peditaccept"))
+    (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
+    (command "_.pedit" "_m" arc edpline "" "_j" "" "")
+  )
+
+  (command "_.undo" "_end")
+  
+  ;; restaurer les valeurs des variables système
+  (setvar "osmode" osm)
+  (setvar "cmdecho" echo)
+  (princ)
+) ; fin portec
 
 
-; gel/ dégel le calque NP
+;;; gel/ dégel le calque NP ;;;
 (defun c:gnp ()
   (command "_.undo" "_group")
 
@@ -186,9 +340,9 @@
     (command "_.undo" "_end")
     (princ)
 
-)
+) ; fin gnp
 
-; verrouille / déverrouille le calque NP
+;;; verrouille / déverrouille le calque NP ;;;
 (defun c:vnp ()
   (command "_.undo" "_group")
 
@@ -217,8 +371,9 @@
   (command "_.undo" "_end")
   (princ)
 
-)
+) ; fin vnp
 
+;;; repeat_offset : permet de faire un décaler multiple. décaler l'objet selon une liste de distance (mode cumul ou interval) ;;;
 (defun c:repeat_offset ( / ent mode vn lst_vn tmp side_offset)
 
         (setq ent "Interval" mode nil)
@@ -357,7 +512,8 @@
 
                                         (setq side_offset (getpoint "\nSpécifiez un point sur le côté à décaler: "))
 
-                                        (setvar "cmdecho" 0)
+                                        (getvar echo "cmdecho")
+				 	(setvar "cmdecho" 0)
 
                                         (command "_.undo" "_group")
 
@@ -365,7 +521,7 @@
 
                                         (command "_.undo" "_group")
 
-                                        (setvar "cmdecho" 1)
+                                        (setvar "cmdecho" echo)
 
                                 )
 
@@ -375,16 +531,14 @@
 
         )
 
-        (prin1)
+        (princ)
 
-)
+); fin repeat_offset
 
-; T2M - convert individual Texts/Dtexts to individual MTexts
 
+;;; T2M - convert individual Texts/Dtexts to individual MTexts ;;;
 ; modified by Xanadu - www.xanadu.cz
-
 ; ***** This routine NEEDS the Express Tools *****
-
 
 (defun C:T2M (/ ss i elist)
 
@@ -406,9 +560,7 @@
 
   )
 
-)
-
-
+) ; fin T2M
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Incrementation lettre ou numero des sommets d'une polyligne
 ;http://cadxp.com/topic/29955-icrementation-texte-dans-lordre-dune-polyligne/
@@ -586,7 +738,7 @@
   (command "_.undo" "_end")
   (princ)
 
-)
+) ; fin inc
 
 
 
@@ -606,7 +758,7 @@
             )
         )
     )
-)
+) ; fin A++
 
 
    ;; Gère les propriétés populaires des cellules d'un tableau
@@ -644,7 +796,7 @@
  
    )
  
-)
+) ; fin SetCellProperties
 
 ;;; TableStyle personnel
 (defun AddMyTabStyle (textsize / docObj tblObj tblStlObj)
@@ -663,5 +815,5 @@
   
   (vla-settextstyle tblStlObj (+ acDataRow acTitleRow acHeaderRow) "Standard")
   (princ)
-  )
+  ) ; fin AddMyTabStyle
 
