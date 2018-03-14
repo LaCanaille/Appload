@@ -220,25 +220,14 @@
   (if (> angside PI)
 
     (progn
+      ;(princ "hello1")
+      ; direction porte
       (if (and (< angext angside) (> angext (- angside PI)))
 	(setq dir (- 1))
 	(setq dir (+ 1))
       )
-    )
 
-    (progn				; angside > pi
-      (if (and (> angext angside) (< angext (+ angside PI)))
-	(setq dir (+ 1))
-	(setq dir (- 1))
-      )
-    )
-
-  )
-
-  ; direction embrasure
-  (if (> angside PI)
-
-    (progn
+      ; direction embrasure
       (if (and (< angextc angside) (> angextc (- angside PI)))
 	(setq dirc (- 1))
 	(setq dirc (+ 1))
@@ -246,11 +235,19 @@
     )
 
     (progn				; angside > pi
+      ; direction porte
+      (if (and (> angext angside) (< angext (+ angside PI)))
+	(setq dir (+ 1))
+	(setq dir (- 1))
+      )
+
+      ; direction embrasure
       (if (and (> angextc angside) (< angextc (+ angside PI)))
 	(setq dirc (+ 1))
 	(setq dirc (- 1))
       )
     )
+
   )
 
   ; dessin cadre
@@ -282,22 +279,26 @@
   (setq angside (+ angside (* pi4 dir)))
   (setq ext (polar a angside (distance a b)))
 
+  ;;;;;;;;;;;;;;;
   (command "_.pline" "_none" a "_none" ext "")
   (setq edpline (entlast))		; mémorise pline
-
+  
   (if (< dir 0)
 
-    (command "_.arc" "_c" "_none" a ext b)
-    (command "_.arc" "_c" "_none" a b ext)
+    (command "_.arc" "_none" "_c"  a  "_none" ext "_none" b)
+    (command "_.arc" "_none" "_c"  a  "_none" b "_none" ext)
   )
-  ;(command "_.chprop" "_last" "" "_ltype" "CACHE2" "")
+  (setq arc (entlast))
 
-  ; pour lier la porte et l'arc ensemble - annule le style CACHE2
-  (setq arc (entlast))  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ; pour lier la porte et l'arc ensemble 
   (if (zerop (getvar "peditaccept"))
     (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
     (command "_.pedit" "_m" arc edpline "" "_j" "" "")
   )
+ 
+  (command "regen")
   (setvar "CECOLOR" oldcolor)
 
   (command "_.undo" "_end")
