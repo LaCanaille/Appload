@@ -13,7 +13,7 @@
 ;;; porte : pour dessiner une porte. spécifiez le premier point, le second point, puis cliquez du côté où ouvrir la porte
 ;;;
 ;;; portec : pour dessiner une porte avec embrasure. spécifiez le premier point, le second point, puis cliquez du côté où ouvrir la porte ainsi que du côté où dessiner les embrasures.
-;;; Indiquez les dimensions du cadre
+;;; Pour changer les dimensions par défaut du cadre tapez sur une touche au début
 ;;;
 ;;; spécial pour Mathilde pour la gestion du calque np (pourrait s'appliquer à d'autres calques
 ;;; gnp : gel ou dégèle le calque np
@@ -251,10 +251,11 @@
 	(setq dirc (- 1))
       )
     )
-
   )
 
   ; dessin cadre
+  (setq oldcolor (getvar "CECOLOR")) ; sauvegarde de la couleur courante
+  (setvar "CECOLOR" "252")
   (setq dircpi2 (+ angside (* dirc pi2)))
   (setq pt11 (polar pt1 angside *la*)
 	pt12 (polar pt11 dircpi2 *ht*)
@@ -267,10 +268,15 @@
 	)
 
   (command "_.pline" "_none" pt1 "_none" pt11 "_none" pt12 "_none" pt13 "c" )
-  (command "._hatch" "_S"  (entlast) "" )
+  (command "chprop" "_last" "" "CO" "7" "") ; blanc
+  (command "._hatch" "_S"  (entlast) "")
+  (command "chprop" "_last" "" "CO" "253" "")
 
   (command "_.pline" "_none" pt2 "_none" pt21 "_none" pt22 "_none" pt23 "c" )
+  (command "chprop" "_last" "" "CO" "7" "")
   (command "._hatch" "_S" (entlast) "")
+  (command "chprop" "_last" "" "CO" "253" "")
+  
   ;dessin porte
 
   (setq angside (+ angside (* pi4 dir)))
@@ -292,6 +298,7 @@
     (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
     (command "_.pedit" "_m" arc edpline "" "_j" "" "")
   )
+  (setvar "CECOLOR" oldcolor)
 
   (command "_.undo" "_end")
   
