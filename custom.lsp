@@ -264,6 +264,7 @@
 	b    (polar pt21 dircpi2 (/ *ht* 2))
 	)
 
+
   (command "_.pline" "_none" pt1 "_none" pt11 "_none" pt12 "_none" pt13 "c" )
   (command "chprop" "_last" "" "CO" "7" "") ; blanc
   (command "._hatch" "_S"  (entlast) "")
@@ -273,6 +274,14 @@
   (command "chprop" "_last" "" "CO" "7" "")
   (command "._hatch" "_S" (entlast) "")
   (command "chprop" "_last" "" "CO" "253" "")
+
+      
+  ; dessin lignes entre embrasure
+  (command "_.pline" "_none" pt11 "_none" pt21 "")
+  (command "_.chprop" "_last" "" "_ltype" "CACHE2" "")
+  (command "_.pline" "_none" pt12 "_none" pt22 "")
+  (command "_.chprop" "_last" "" "_ltype" "CACHE2" "")
+  
   
   ;dessin porte
 
@@ -297,7 +306,7 @@
     (command "_.pedit" "_m" arc edpline "" "_y" "_j" "" "")
     (command "_.pedit" "_m" arc edpline "" "_j" "" "")
   )
- 
+  
   (command "regen")
   (setvar "CECOLOR" oldcolor)
 
