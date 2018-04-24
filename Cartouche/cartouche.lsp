@@ -346,10 +346,9 @@
   (setq osm (getvar 'osmode)) ;; sauvegarde des variables système
   (setvar 'osmode 0)
   ;;;
-  
+  (princ)
   (setq gabarit "CartoucheMesuralpes.dwt") ; gabarit cartouche dans le dossier des templates
-  (setq page "TOP_A1_00200_01-01-2017_MODELE")
-    
+  (setq page "TOP_A1_00200_01-01-2017_MODELE")    
   (setq dcl_id (load_dialog "cartouche.dcl"))		;load dialog
       
   (if (not (new_dialog "cartouche" dcl_id)		;test for dialog
@@ -377,7 +376,7 @@
 
   ; set the popup lists
   (popupVar) ; définition des listes déroulantes
-  
+ 
   (start_list "Bureau")				;start the list box
   (mapcar 'add_list burList)				;fill the list box
   (end_list)
@@ -471,8 +470,7 @@
        (mode_tile "Lot" 0)
        (mode_tile "Lot" 1)
      )
-  
-  
+ 
   ; get the values !! important de sauvegarder les champs des edit_box
   (action_tile "Numero" "(setq Numero $value)")
   (action_tile "Bureau" "(setq Bureau $value)")
@@ -544,7 +542,7 @@
 
   
   (start_dialog)					;start dialog
- 
+
   (unload_dialog dcl_id)				;unload
 
   (if (not userclick)
@@ -642,8 +640,8 @@
 ;;;    (SetCustomByKeyT "Objet1" " " target)
 ;;;    ;(SetCustomByKeyT "Objet1" (strcat "Objet " Objet)  target)
 ;;;    )
-  
  
+
   (SetCustomByKeyT "Planimetrie" Planimetrie target)
   (SetCustomByKeyT "PlaniMethode" PlaniMethode target)
   (if (and (= "1" (GetIndex "PlaniMethode" target mPlaniListC)) (not (isEmpty PlaniDate)))
@@ -982,6 +980,8 @@
 "ÉPURE";28
 "ALIGNEMENT";29
 "AUSCULTATION";30
+"AVANT-PROJET";31
+"PROJET";32
  ))
   
   ;LISTE TITRE POUR LE CARTOUCHE
@@ -1017,6 +1017,8 @@
 "ÉPURE D'IMPLANTATION";28
 "PLAN D'ALIGNEMENT";29
 "PLAN D'AUSCULTATION";30
+"AVANT-PROJET";31
+"PROJET";32
 ))
 
   (setq planListT (list ; type 3 lettres
@@ -1051,6 +1053,8 @@
 "EPU";28
 "ALI";29
 "AUS";30
+"AVP";31
+"PRJ";32
 ))		   
 
   
